@@ -1,0 +1,7 @@
+## Ignore References folder
+References/
+bin/
+obj/
+Refs/
+.vs/
+*.csproj.user

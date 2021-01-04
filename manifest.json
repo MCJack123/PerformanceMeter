@@ -1,0 +1,13 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/beat-saber-modding-group/BSIPA-MetadataFileSchema/master/Schema.json",
+  "id": "PerformanceMeter",
+  "name": "PerformanceMeter",
+  "author": "JackMacWindows",
+  "version": "0.0.1",
+  "description": "Shows a graph of your energy bar level throughout a level on the end screen.",
+  "gameVersion": "1.12.2",
+  "dependsOn": {
+    "BSIPA": "^4.1.3"
+  },
+  "features": []
+}

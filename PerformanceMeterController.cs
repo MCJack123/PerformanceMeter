@@ -122,7 +122,7 @@ namespace PerformanceMeter
         }
 
         public void GetControllers() {
-            scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().FirstOrDefault();
+            scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().LastOrDefault();
             energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();
             rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().FirstOrDefault();
             endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().FirstOrDefault();

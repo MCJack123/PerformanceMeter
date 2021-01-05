@@ -8,17 +8,24 @@
  * Copyright (c) 2021 JackMacWindows.
  */
 
-/*
 using System.Runtime.CompilerServices;
 using IPA.Config.Stores;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
-namespace PerformanceMeter.Configuration
+namespace PerformanceMeter
 {
-    internal class PluginConfig
+    public class PluginConfig
     {
         public static PluginConfig Instance { get; set; }
-        public virtual int IntValue { get; set; } = 42; // Must be 'virtual' if you want BSIPA to detect a value change and save the config automatically.
+        public virtual bool Enabled { get; set; } = true;
+        public virtual int Mode { get; set; } = (int)MeasurementMode.Energy; // Must be 'virtual' if you want BSIPA to detect a value change and save the config automatically.
+        internal MeasurementMode GetMode() { return (MeasurementMode)Mode; }
+
+        public enum MeasurementMode {
+            Energy,
+            PercentModified,
+            PercentRaw
+        };
 
         /// <summary>
         /// This is called whenever BSIPA reads the config from disk (including when file changes are detected).
@@ -45,4 +52,3 @@ namespace PerformanceMeter.Configuration
         }
     }
 }
-*/

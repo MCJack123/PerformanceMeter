@@ -35,9 +35,10 @@ namespace PerformanceMeter
         /// [Init] methods that use a Constructor or called before regular methods like InitWithConfig.
         /// Only use [Init] with one Constructor.
         /// </summary>
-        public void Init(IPALogger logger) {
+        public void Init(IPALogger logger, IPA.Config.Config conf) {
             instance = this;
             Logger.log = logger;
+            PluginConfig.Instance = conf.Generated<PluginConfig>();
             Logger.log.Debug("Logger initialized.");
         }
 
@@ -56,12 +57,14 @@ namespace PerformanceMeter
         [OnStart]
         public void OnApplicationStart() {
             Logger.log.Debug("OnApplicationStart");
-            new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
-            BSEvents.gameSceneActive += GameSceneActive;
-            BSEvents.menuSceneActive += MenuSceneActive;
-            BSEvents.levelCleared += BSEvents_levelCleared;
-            BSEvents.levelFailed += BSEvents_levelCleared;
-            SceneManager.activeSceneChanged += ActiveSceneChanged;
+            if (PluginConfig.Instance.Enabled) {
+                new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
+                BSEvents.gameSceneActive += GameSceneActive;
+                BSEvents.menuSceneActive += MenuSceneActive;
+                BSEvents.levelCleared += BSEvents_levelCleared;
+                BSEvents.levelFailed += BSEvents_levelCleared;
+                SceneManager.activeSceneChanged += ActiveSceneChanged;
+            }
         }
 
         private void BSEvents_levelCleared(StandardLevelScenesTransitionSetupDataSO arg1, LevelCompletionResults arg2) {
@@ -76,6 +79,7 @@ namespace PerformanceMeter
 
         void GameSceneActive() {
             PerformanceMeterController.instance.energyList.Clear();
+            if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) PerformanceMeterController.instance.energyList.Add(0.5f);
             PerformanceMeterController.instance.GetControllers();
         }
 
@@ -84,7 +88,6 @@ namespace PerformanceMeter
         }
 
         void ActiveSceneChanged(Scene oldScene, Scene newScene) {
-            Console.WriteLine(newScene.name);
             if (newScene.name == "MenuViewControllers") PerformanceMeterController.instance.ShowResults();
         }
     }

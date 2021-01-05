@@ -31,6 +31,7 @@ namespace PerformanceMeter
         public List<float> energyList = new List<float>();
         ScoreController scoreController;
         GameEnergyCounter energyCounter;
+        RelativeScoreAndImmediateRankCounter rankCounter;
         ResultsViewController resultsController;
         GameObject panel;
         ILevelEndActions endActions;
@@ -39,7 +40,7 @@ namespace PerformanceMeter
         public void ShowResults() {
             if (!levelOk) return;
             levelOk = false;
-            Console.WriteLine("Found " + energyList.Count() + " notes");
+            Logger.log.Debug("Found " + energyList.Count() + " notes");
             panel = new GameObject("PerformanceMeter");
             Canvas canvas = panel.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
@@ -65,25 +66,6 @@ namespace PerformanceMeter
         }
 
         #region Monobehaviour Messages
-        IEnumerator WaitForLoad() {
-            bool loaded = false;
-            while (!loaded) {
-                if (scoreController == null) scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().FirstOrDefault();          
-                if (energyCounter == null) energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();    
-                if (endActions == null) endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().FirstOrDefault();
-                if (endActions == null) endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().FirstOrDefault();
-                if (scoreController != null && energyCounter != null && endActions != null) loaded = true;
-                else yield return new WaitForSeconds(0.1f);
-            }
-
-            yield return new WaitForSeconds(0.1f);
-            scoreController.noteWasCutEvent += NoteHit;
-            scoreController.noteWasMissedEvent += NoteMiss;
-            endActions.levelFinishedEvent += LevelFinished;
-            endActions.levelFailedEvent += LevelFinished;
-            Console.WriteLine("PerformanceMeter loaded successfully");
-        }
-
         IEnumerator WaitForMenu() {
             bool loaded = false;
             while (!loaded) {
@@ -95,7 +77,20 @@ namespace PerformanceMeter
             yield return new WaitForSeconds(0.1f);
             resultsController.continueButtonPressedEvent += DismissGraph;
             resultsController.restartButtonPressedEvent += DismissGraph;
-            Console.WriteLine("PerformanceMeter loaded successfully");
+            Logger.log.Debug("PerformanceMeter menu created successfully");
+        }
+
+        IEnumerator PauseAndRecord() {
+            yield return new WaitForSeconds(0.01f);
+            float newEnergy = 0f;
+            switch (PluginConfig.Instance.GetMode()) {
+                case PluginConfig.MeasurementMode.Energy: newEnergy = energyCounter.energy; break;
+                case PluginConfig.MeasurementMode.PercentModified: newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore; break;
+                case PluginConfig.MeasurementMode.PercentRaw: newEnergy = rankCounter.relativeScore; break;
+                default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record a score."); break;
+            }
+            Logger.log.Debug(newEnergy.ToString());
+            energyList.Add(newEnergy);
         }
 
         void DismissGraph(ResultsViewController vc) {
@@ -107,28 +102,25 @@ namespace PerformanceMeter
         }
 
         public void GetControllers() {
-            scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().FirstOrDefault();          
-            energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();    
+            scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().FirstOrDefault();
+            energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();
+            rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().FirstOrDefault();
             endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().FirstOrDefault();
             if (scoreController != null && energyCounter != null && endActions != null) {
                 scoreController.noteWasCutEvent += NoteHit;
                 scoreController.noteWasMissedEvent += NoteMiss;
                 endActions.levelFinishedEvent += LevelFinished;
                 endActions.levelFailedEvent += LevelFinished;
-                Console.WriteLine("PerformanceMeter reloaded successfully");
+                Logger.log.Debug("PerformanceMeter reloaded successfully");
             }
         }
 
         private void NoteHit(NoteData data, NoteCutInfo info, int score) {
-            float newEnergy = energyCounter.energy;
-            Console.WriteLine(newEnergy);
-            energyList.Add(newEnergy);
+            StartCoroutine(PauseAndRecord());
         }
 
         private void NoteMiss(NoteData data, int score) {
-            float newEnergy = energyCounter.energy;
-            Console.WriteLine(newEnergy);
-            energyList.Add(newEnergy);
+            StartCoroutine(PauseAndRecord());
         }
 
         private void LevelFinished() {

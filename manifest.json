@@ -3,8 +3,8 @@
   "id": "PerformanceMeter",
   "name": "PerformanceMeter",
   "author": "JackMacWindows",
-  "version": "0.0.1",
-  "description": "Shows a graph of your energy bar level throughout a level on the end screen.",
+  "version": "0.0.2",
+  "description": "Shows a graph of your energy bar or percentage level throughout a map on the end screen.",
   "gameVersion": "1.12.2",
   "dependsOn": {
     "BSIPA": "^4.1.3"

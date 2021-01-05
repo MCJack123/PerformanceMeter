@@ -115,7 +115,7 @@ public class WindowGraph : MonoBehaviour
         var yDifference = yMaximum - yMinimum;
         if (yDifference <= 0)
             yDifference = 5f;
-        yMaximum = yMaximum + (yDifference * 0.2f);
+        //yMaximum = yMaximum + (yDifference * 0.2f);
         yMinimum = yMinimum - (yDifference * 0.2f);
 
         if (makeOriginZero)
@@ -123,8 +123,6 @@ public class WindowGraph : MonoBehaviour
 
         var xSize = graphWidth / (maxVisibleValueAmount + 1);
         var xIndex = 0;
-
-        Console.WriteLine("Height: " + graphHeight);
 
         GameObject lastCircleGameObject = null;
         for (var i = Mathf.Max(valueList.Count - maxVisibleValueAmount, 0); i < valueList.Count; i++)
@@ -198,11 +196,19 @@ public class WindowGraph : MonoBehaviour
         var gameObject = new GameObject("DotConnection", typeof(Image));
         gameObject.transform.SetParent(GraphContainer, false);
         var image = gameObject.GetComponent<Image>();
-        Console.WriteLine(dotPositionB.y);
-        if (dotPositionB.y / graphHeight <= 1.0 && dotPositionB.y / graphHeight >= 0.5) image.color = new Color(0.25f, 1.0f, 0.25f, .5f);
-        else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.25) image.color = new Color(1.0f, 1.0f, 0.25f, .5f);
-        else if (dotPositionB.y / graphHeight < 0.25 && dotPositionB.y / graphHeight >= 0) image.color = new Color(1.0f, 0.25f, 0.25f, .5f);
-        else image.color = new Color(1, 1, 1, .5f);
+        if (PerformanceMeter.PluginConfig.Instance.GetMode() != PerformanceMeter.PluginConfig.MeasurementMode.Energy) {
+            if (dotPositionB.y / graphHeight < 0.9 && dotPositionB.y / graphHeight >= 0.8) image.color = Color.white.ColorWithAlpha(.5f);
+            else if (dotPositionB.y / graphHeight < 0.8 && dotPositionB.y / graphHeight >= 0.65) image.color = Color.green.ColorWithAlpha(.5f);
+            else if (dotPositionB.y / graphHeight < 0.65 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.yellow.ColorWithAlpha(.5f);
+            else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.35) image.color = new Color(1.0f, 0.5f, 0.0f, .5f);
+            else if (dotPositionB.y / graphHeight < 0.35) image.color = Color.red.ColorWithAlpha(.5f);
+            else image.color = Color.cyan.ColorWithAlpha(.5f);
+        } else {
+            if (dotPositionB.y / graphHeight <= 1.0 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.green.ColorWithAlpha(.5f);
+            else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.25) image.color = Color.yellow.ColorWithAlpha(.5f);
+            else if (dotPositionB.y / graphHeight < 0.25 && dotPositionB.y / graphHeight >= 0) image.color = Color.red.ColorWithAlpha(.5f);
+            else image.color = Color.white.ColorWithAlpha(.5f);
+        }
         image.enabled = makeLinkVisible;
         var rectTransform = gameObject.GetComponent<RectTransform>();
         var dir = (dotPositionB - dotPositionA).normalized;

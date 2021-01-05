@@ -8,12 +8,7 @@
  * Copyright (c) 2021 JackMacWindows.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using IPA;
-using IPA.Config;
 using IPA.Config.Stores;
 using UnityEngine.SceneManagement;
 using UnityEngine;
@@ -42,53 +37,34 @@ namespace PerformanceMeter
             Logger.log.Debug("Logger initialized.");
         }
 
-        #region BSIPA Config
-        //Uncomment to use BSIPA's config
-        /*
-        [Init]
-        public void InitWithConfig(Config conf)
-        {
-            Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
-            Logger.log.Debug("Config loaded");
-        }
-        */
-        #endregion
-
         [OnStart]
         public void OnApplicationStart() {
             Logger.log.Debug("OnApplicationStart");
-            if (PluginConfig.Instance.Enabled) {
-                new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
-                BSEvents.gameSceneActive += GameSceneActive;
-                BSEvents.menuSceneActive += MenuSceneActive;
-                BSEvents.levelCleared += BSEvents_levelCleared;
-                BSEvents.levelFailed += BSEvents_levelCleared;
-                SceneManager.activeSceneChanged += ActiveSceneChanged;
-            }
-        }
-
-        private void BSEvents_levelCleared(StandardLevelScenesTransitionSetupDataSO arg1, LevelCompletionResults arg2) {
-            //PerformanceMeterController.instance.ShowResults();
+            new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
+            BSEvents.gameSceneActive += GameSceneActive;
+            SceneManager.activeSceneChanged += ActiveSceneChanged;
         }
 
         [OnExit]
         public void OnApplicationQuit() {
             Logger.log.Debug("OnApplicationQuit");
-
         }
 
         void GameSceneActive() {
-            PerformanceMeterController.instance.energyList.Clear();
-            if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) PerformanceMeterController.instance.energyList.Add(0.5f);
-            PerformanceMeterController.instance.GetControllers();
-        }
-
-        void MenuSceneActive() {
-            //PerformanceMeterController.instance.ShowResults();
+            if (PluginConfig.Instance.enabled) {
+                PerformanceMeterController.instance.energyList.Clear();
+                if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) PerformanceMeterController.instance.energyList.Add(0.5f);
+                PerformanceMeterController.instance.GetControllers();
+            }
         }
 
         void ActiveSceneChanged(Scene oldScene, Scene newScene) {
-            if (newScene.name == "MenuViewControllers") PerformanceMeterController.instance.ShowResults();
+            if (PluginConfig.Instance.enabled && newScene.name == "MenuViewControllers") PerformanceMeterController.instance.ShowResults();
         }
+    }
+
+    internal static class Logger
+    {
+        internal static IPALogger log { get; set; }
     }
 }

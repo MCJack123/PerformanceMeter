@@ -17,9 +17,9 @@ namespace PerformanceMeter
     public class PluginConfig
     {
         public static PluginConfig Instance { get; set; }
-        public virtual bool Enabled { get; set; } = true;
-        public virtual int Mode { get; set; } = (int)MeasurementMode.Energy; // Must be 'virtual' if you want BSIPA to detect a value change and save the config automatically.
-        internal MeasurementMode GetMode() { return (MeasurementMode)Mode; }
+        public virtual bool enabled { get; set; } = true;
+        public virtual int mode { get; set; } = (int)MeasurementMode.Energy; // Must be 'virtual' if you want BSIPA to detect a value change and save the config automatically.
+        internal MeasurementMode GetMode() { return (MeasurementMode)mode; }
 
         public enum MeasurementMode {
             Energy,

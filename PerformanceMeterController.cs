@@ -8,16 +8,12 @@
  * Copyright (c) 2021 JackMacWindows.
  */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using BS_Utils.Utilities;
+using TMPro;
 
 namespace PerformanceMeter
 {
@@ -41,27 +37,48 @@ namespace PerformanceMeter
             if (!levelOk) return;
             levelOk = false;
             Logger.log.Debug("Found " + energyList.Count() + " notes");
+
             panel = new GameObject("PerformanceMeter");
+            panel.transform.Rotate(22.5f, 0, 0, Space.World);
             Canvas canvas = panel.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
-            canvas.GetComponent<RectTransform>().localPosition = new Vector3(0.0f, 2.25f, 2.0f);
-            canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(1.5f, 0.75f);
-            canvas.GetComponent<RectTransform>().rotation = Quaternion.AngleAxis(30, Vector3.left);
-            GameObject imageObj = new GameObject();
-            imageObj.transform.parent = canvas.transform;
-            imageObj.name = "Background";
+            canvas.scaleFactor = 0.01f;
+            canvas.GetComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.4f, 2.25f);
+            canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(1.0f, 0.5f);
+            canvas.transform.Rotate(22.5f, 0, 0, Space.World);
+            panel.AddComponent<CanvasRenderer>();
+            panel.AddComponent<HMUI.CurvedCanvasSettings>();
+
+            GameObject imageObj = new GameObject("Background");
+            imageObj.transform.SetParent(canvas.transform);
+            imageObj.transform.Rotate(22.5f, 0, 0, Space.World);
             Image img = imageObj.AddComponent<Image>();
-            img.color = new Color(0.25f, 0.25f, 0.25f, 0.5f);
+            img.color = new Color(0.1f, 0.1f, 0.1f, 0.25f);
             img.GetComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.0f, 0.0f);
-            img.GetComponent<RectTransform>().sizeDelta = new Vector2(1.5f, 0.75f);
+            img.GetComponent<RectTransform>().sizeDelta = new Vector2(1.0f, 0.6f);
+
+            GameObject textObj = new GameObject("Label");
+            textObj.transform.SetParent(canvas.transform);
+            textObj.transform.Rotate(22.5f, 0, 0, Space.World);
+            HMUI.CurvedTextMeshPro text = textObj.AddComponent<HMUI.CurvedTextMeshPro>();
+            text.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF No Glow"));
+            text.fontSize = 9.0f;
+            text.alignment = TextAlignmentOptions.Right;
+            text.text = "Performance";
+            text.enableAutoSizing = true;
+            text.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
+            text.GetComponent<RectTransform>().localPosition = new Vector3(-0.3f, -0.25f, 0.1f);
+            text.GetComponent<RectTransform>().sizeDelta = new Vector2(75.0f, 25.0f);
+
             GameObject graphObj = new GameObject("GraphContainer");
-            graphObj.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 2.25f, 2.0f);
-            graphObj.GetComponent<RectTransform>().sizeDelta = new Vector2(1.5f, 0.75f);
+            graphObj.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.45f, 2.275f);
+            graphObj.GetComponent<RectTransform>().sizeDelta = new Vector2(1.0f, 0.45f);
+            graphObj.transform.Rotate(22.5f, 0, 0, Space.World);
             graphObj.transform.SetParent(panel.transform);
-            graphObj.name = "GraphContainer";
             graphObj.transform.name = "GraphContainer";
             WindowGraph graph = panel.AddComponent<WindowGraph>();
             graph.ShowGraph(energyList, false, true, true);
+
             StartCoroutine(WaitForMenu());
         }
 
@@ -81,15 +98,14 @@ namespace PerformanceMeter
         }
 
         IEnumerator PauseAndRecord() {
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.001f); // Wait a tiny bit of time because the note cut event is sent just before the energy/percentage update
             float newEnergy = 0f;
             switch (PluginConfig.Instance.GetMode()) {
                 case PluginConfig.MeasurementMode.Energy: newEnergy = energyCounter.energy; break;
                 case PluginConfig.MeasurementMode.PercentModified: newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore; break;
                 case PluginConfig.MeasurementMode.PercentRaw: newEnergy = rankCounter.relativeScore; break;
-                default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record a score."); break;
+                default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); yield break;
             }
-            Logger.log.Debug(newEnergy.ToString());
             energyList.Add(newEnergy);
         }
 
@@ -98,6 +114,10 @@ namespace PerformanceMeter
                 Destroy(panel);
                 panel = null;
                 resultsController = null;
+                scoreController = null;
+                energyCounter = null;
+                rankCounter = null;
+                endActions = null;
             }
         }
 
@@ -106,12 +126,20 @@ namespace PerformanceMeter
             energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();
             rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().FirstOrDefault();
             endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().FirstOrDefault();
-            if (scoreController != null && energyCounter != null && endActions != null) {
+            if (endActions == null) endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().FirstOrDefault();
+
+            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) {
                 scoreController.noteWasCutEvent += NoteHit;
                 scoreController.noteWasMissedEvent += NoteMiss;
                 endActions.levelFinishedEvent += LevelFinished;
                 endActions.levelFailedEvent += LevelFinished;
                 Logger.log.Debug("PerformanceMeter reloaded successfully");
+            } else {
+                Logger.log.Error("Could not reload PerformanceMeter");
+                scoreController = null;
+                energyCounter = null;
+                rankCounter = null;
+                endActions = null;
             }
         }
 
@@ -124,7 +152,7 @@ namespace PerformanceMeter
         }
 
         private void LevelFinished() {
-            levelOk = true;
+            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) levelOk = true;
         }
 
         /// <summary>
@@ -137,54 +165,14 @@ namespace PerformanceMeter
             if (instance != null)
             {
                 Logger.log?.Warn($"Instance of {this.GetType().Name} already exists, destroying.");
-                GameObject.DestroyImmediate(this);
+                DestroyImmediate(this);
                 return;
             }
-            GameObject.DontDestroyOnLoad(this); // Don't destroy this object on scene changes
+            DontDestroyOnLoad(this); // Don't destroy this object on scene changes
             instance = this;
             Logger.log?.Debug($"{name}: Awake()");
-            //StartCoroutine(WaitForLoad());
         }
-        /// <summary>
-        /// Only ever called once on the first frame the script is Enabled. Start is called after any other script's Awake() and before Update().
-        /// </summary>
-        private void Start()
-        {
-
-        }
-
-        /// <summary>
-        /// Called every frame if the script is enabled.
-        /// </summary>
-        private void Update()
-        {
-
-        }
-
-        /// <summary>
-        /// Called every frame after every other enabled script's Update().
-        /// </summary>
-        private void LateUpdate()
-        {
-
-        }
-
-        /// <summary>
-        /// Called when the script becomes enabled and active
-        /// </summary>
-        private void OnEnable()
-        {
-
-        }
-
-        /// <summary>
-        /// Called when the script becomes disabled or when it is being destroyed.
-        /// </summary>
-        private void OnDisable()
-        {
-
-        }
-
+      
         /// <summary>
         /// Called when the script is being destroyed.
         /// </summary>
@@ -192,7 +180,6 @@ namespace PerformanceMeter
         {
             Logger.log?.Debug($"{name}: OnDestroy()");
             instance = null; // This MonoBehaviour is being destroyed, so set the static instance property to null.
-
         }
         #endregion
     }

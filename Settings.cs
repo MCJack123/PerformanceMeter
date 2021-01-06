@@ -19,7 +19,7 @@ namespace PerformanceMeter {
         //public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         [UIValue("mode-options")]
-        public List<object> modeOptions = new object[] { "Energy", "Percentage (Modified)", "Percentage (Raw)", "Cut Value", "Average Cut Value" }.ToList();
+        public List<object> modeOptions = new object[] { "Energy", "Percentage (Modified)", "Percentage (Raw)", "Note Cut Value", "Average Cut Value" }.ToList();
 
         [UIValue("mode")]
         public string listChoice = "Energy";

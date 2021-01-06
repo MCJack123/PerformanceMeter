@@ -28,7 +28,6 @@ namespace PerformanceMeter {
         ScoreController scoreController;
         GameEnergyCounter energyCounter;
         RelativeScoreAndImmediateRankCounter rankCounter;
-        ResultsViewController resultsController;
         GameObject panel;
         ILevelEndActions endActions;
         bool levelOk = false;
@@ -85,15 +84,29 @@ namespace PerformanceMeter {
         #region Monobehaviour Messages
         IEnumerator WaitForMenu() {
             bool loaded = false;
-            while (!loaded) {
-                if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<ResultsViewController>().FirstOrDefault();
-                if (resultsController != null) loaded = true;
-                else yield return new WaitForSeconds(0.1f);
-            }
+            if (endActions is StandardLevelGameplayManager) {
+                ResultsViewController resultsController = null;
+                while (!loaded) {
+                    if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<ResultsViewController>().FirstOrDefault();
+                    if (resultsController != null) loaded = true;
+                    else yield return new WaitForSeconds(0.1f);
+                }
 
-            yield return new WaitForSeconds(0.1f);
-            resultsController.continueButtonPressedEvent += DismissGraph;
-            resultsController.restartButtonPressedEvent += DismissGraph;
+                yield return new WaitForSeconds(0.1f);
+                resultsController.continueButtonPressedEvent += DismissGraph;
+                resultsController.restartButtonPressedEvent += DismissGraph;
+            } else {
+                MissionResultsViewController resultsController = null;
+                while (!loaded) {
+                    if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<MissionResultsViewController>().FirstOrDefault();
+                    if (resultsController != null) loaded = true;
+                    else yield return new WaitForSeconds(0.1f);
+                }
+
+                yield return new WaitForSeconds(0.1f);
+                resultsController.continueButtonPressedEvent += DismissGraph_Mission;
+                resultsController.retryButtonPressedEvent += DismissGraph_Mission;
+            }
             Logger.log.Debug("PerformanceMeter menu created successfully");
         }
 
@@ -101,7 +114,6 @@ namespace PerformanceMeter {
             if (panel != null) {
                 Destroy(panel);
                 panel = null;
-                resultsController = null;
                 scoreController = null;
                 energyCounter = null;
                 rankCounter = null;
@@ -109,6 +121,10 @@ namespace PerformanceMeter {
                 averageHitValue = 0.0f;
                 averageHitValueSize = 0;
             }
+        }
+
+        void DismissGraph_Mission(MissionResultsViewController vc) {
+            DismissGraph(null);
         }
 
         public void GetControllers() {

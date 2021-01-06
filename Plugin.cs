@@ -16,12 +16,9 @@ using IPALogger = IPA.Logging.Logger;
 using BS_Utils.Utilities;
 using BeatSaberMarkupLanguage.Settings;
 
-namespace PerformanceMeter
-{
-
+namespace PerformanceMeter {
     [Plugin(RuntimeOptions.SingleStartInit)]
-    public class Plugin
-    {
+    public class Plugin {
         internal static Plugin instance { get; private set; }
         internal static string Name => "PerformanceMeter";
 
@@ -41,8 +38,7 @@ namespace PerformanceMeter
         [OnStart]
         public void OnApplicationStart() {
             Logger.log.Debug("OnApplicationStart");
-            GameObject gameobj = new GameObject("PerformanceMeterController");
-            gameobj.AddComponent<PerformanceMeterController>();
+            new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
             BSEvents.gameSceneActive += GameSceneActive;
             SceneManager.activeSceneChanged += ActiveSceneChanged;
             BSMLSettings.instance.AddSettingsMenu("PerformanceMeter", "PerformanceMeter.Settings", Settings.instance);
@@ -54,11 +50,7 @@ namespace PerformanceMeter
         }
 
         void GameSceneActive() {
-            if (PluginConfig.Instance.enabled) {
-                PerformanceMeterController.instance.energyList.Clear();
-                if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) PerformanceMeterController.instance.energyList.Add(0.5f);
-                PerformanceMeterController.instance.GetControllers();
-            }
+            if (PluginConfig.Instance.enabled) PerformanceMeterController.instance.GetControllers();
         }
 
         void ActiveSceneChanged(Scene oldScene, Scene newScene) {
@@ -66,8 +58,7 @@ namespace PerformanceMeter
         }
     }
 
-    internal static class Logger
-    {
+    internal static class Logger {
         internal static IPALogger log { get; set; }
     }
 }

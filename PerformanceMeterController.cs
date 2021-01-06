@@ -15,16 +15,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-namespace PerformanceMeter
-{
+namespace PerformanceMeter {
     /// <summary>
     /// Monobehaviours (scripts) are added to GameObjects.
     /// For a full list of Messages a Monobehaviour can receive from the game, see https://docs.unity3d.com/ScriptReference/MonoBehaviour.html.
     /// </summary>
-    public class PerformanceMeterController : MonoBehaviour
-    {
+    public class PerformanceMeterController : MonoBehaviour {
         public static PerformanceMeterController instance { get; private set; }
-        public List<float> energyList = new List<float>();
+        List<float> energyList = new List<float>();
+        float averageHitValue = 0.0f;
+        int averageHitValueSize = 0;
         ScoreController scoreController;
         GameEnergyCounter energyCounter;
         RelativeScoreAndImmediateRankCounter rankCounter;
@@ -97,18 +97,6 @@ namespace PerformanceMeter
             Logger.log.Debug("PerformanceMeter menu created successfully");
         }
 
-        IEnumerator PauseAndRecord() {
-            yield return new WaitForSeconds(0.001f); // Wait a tiny bit of time because the note cut event is sent just before the energy/percentage update
-            float newEnergy = 0f;
-            switch (PluginConfig.Instance.GetMode()) {
-                case PluginConfig.MeasurementMode.Energy: newEnergy = energyCounter.energy; break;
-                case PluginConfig.MeasurementMode.PercentModified: newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore; break;
-                case PluginConfig.MeasurementMode.PercentRaw: newEnergy = rankCounter.relativeScore; break;
-                default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); yield break;
-            }
-            energyList.Add(newEnergy);
-        }
-
         void DismissGraph(ResultsViewController vc) {
             if (panel != null) {
                 Destroy(panel);
@@ -118,10 +106,17 @@ namespace PerformanceMeter
                 energyCounter = null;
                 rankCounter = null;
                 endActions = null;
+                averageHitValue = 0.0f;
+                averageHitValueSize = 0;
             }
         }
 
         public void GetControllers() {
+            averageHitValue = 0.0f;
+            averageHitValueSize = 0;
+            energyList.Clear();
+            if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) energyList.Add(0.5f);
+
             scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().LastOrDefault();
             energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();
             rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().FirstOrDefault();
@@ -140,15 +135,35 @@ namespace PerformanceMeter
                 energyCounter = null;
                 rankCounter = null;
                 endActions = null;
+                averageHitValue = 0.0f;
+                averageHitValueSize = 0;
             }
         }
 
+        private void RecordHitValue(CutScoreBuffer score) {
+            float newEnergy;
+            switch (PluginConfig.Instance.GetMode()) {
+                case PluginConfig.MeasurementMode.Energy: newEnergy = energyCounter.energy; break;
+                case PluginConfig.MeasurementMode.PercentModified: newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore; break;
+                case PluginConfig.MeasurementMode.PercentRaw: newEnergy = rankCounter.relativeScore; break;
+                case PluginConfig.MeasurementMode.CutValue: if (score == null) return; newEnergy = score.scoreWithMultiplier / 115.0f; break;
+                case PluginConfig.MeasurementMode.AvgCutValue:
+                    if (score == null) return;
+                    if (averageHitValueSize == 0) { averageHitValue = score.scoreWithMultiplier / 115.0f; averageHitValueSize++; }
+                    else averageHitValue = ((averageHitValue * averageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++averageHitValueSize;
+                    newEnergy = averageHitValue;
+                    break;
+                default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); return;
+            }
+            energyList.Add(newEnergy);
+        }
+
         private void NoteHit(NoteData data, NoteCutInfo info, int score) {
-            StartCoroutine(PauseAndRecord());
+            (new CutScoreBuffer(info, 1)).didFinishEvent += RecordHitValue;
         }
 
         private void NoteMiss(NoteData data, int score) {
-            StartCoroutine(PauseAndRecord());
+            RecordHitValue(null);
         }
 
         private void LevelFinished() {
@@ -158,12 +173,10 @@ namespace PerformanceMeter
         /// <summary>
         /// Only ever called once, mainly used to initialize variables.
         /// </summary>
-        private void Awake()
-        {
+        private void Awake() {
             // For this particular MonoBehaviour, we only want one instance to exist at any time, so store a reference to it in a static property
             //   and destroy any that are created while one already exists.
-            if (instance != null)
-            {
+            if (instance != null) {
                 Logger.log?.Warn($"Instance of {this.GetType().Name} already exists, destroying.");
                 DestroyImmediate(this);
                 return;
@@ -176,8 +189,7 @@ namespace PerformanceMeter
         /// <summary>
         /// Called when the script is being destroyed.
         /// </summary>
-        private void OnDestroy()
-        {
+        private void OnDestroy() {
             Logger.log?.Debug($"{name}: OnDestroy()");
             instance = null; // This MonoBehaviour is being destroyed, so set the static instance property to null.
         }

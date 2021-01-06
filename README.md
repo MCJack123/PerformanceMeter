@@ -18,7 +18,7 @@ You can also configure PerformanceMeter to measure percentage instead of energy 
 
 ## Configuration
 ### UI
-UI configuration is coming soon.
+PerformanceMeter can be configured in the Mod Settings section of the options. Here you can enable/disable PerformanceMeter, as well as change the mode.
 
 ### JSON
 PerformanceMeter's configuration file is stored at `UserData\PerformanceMeter.json`. Here you can change some options regarding how PerformanceMeter looks and acts.
@@ -27,13 +27,15 @@ PerformanceMeter's configuration file is stored at `UserData\PerformanceMeter.js
 This toggles PerformanceMeter on and off. When set to `false`, recording is disabled and the graph will not be shown.
 
 #### `mode`
-This changes what data PerformanceMeter records in-game. As of 0.1.0, these modes are available:
+This changes what data PerformanceMeter records in-game. As of 1.0.0, these modes are available:
 
 | ID | Statistic             |
 |----|-----------------------|
 | 0  | Energy bar            |
 | 1  | Percentage (modified) |
 | 2  | Percentage (raw)      |
+| 3  | Note Cut Value        |
+| 4  | Average Cut Value     |
 
 More modes may be added in the future.
 

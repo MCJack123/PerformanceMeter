@@ -1,8 +1,14 @@
-﻿using BeatSaberMarkupLanguage;
+﻿/*
+ * Settings.cs
+ * PerformanceMeter
+ *
+ * This file defines the settings panel controller.
+ *
+ * This code is licensed under the MIT license.
+ * Copyright (c) 2021 JackMacWindows.
+ */
+
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
-using BeatSaberMarkupLanguage.ViewControllers;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,7 +19,7 @@ namespace PerformanceMeter {
         //public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         [UIValue("mode-options")]
-        public List<object> modeOptions = new object[] { "Energy", "Percentage (Modified)", "Percentage (Raw)" }.ToList();
+        public List<object> modeOptions = new object[] { "Energy", "Percentage (Modified)", "Percentage (Raw)", "Cut Value", "Average Cut Value" }.ToList();
 
         [UIValue("mode")]
         public string listChoice = "Energy";
@@ -33,8 +39,6 @@ namespace PerformanceMeter {
             PluginConfig.Instance.Changed();
         }
 
-        Settings() {
-            listChoice = modeOptions[PluginConfig.Instance.mode] as string;
-        }
+        Settings() { listChoice = modeOptions[PluginConfig.Instance.mode] as string; }
     }
 }

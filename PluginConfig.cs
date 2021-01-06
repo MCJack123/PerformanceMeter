@@ -41,6 +41,7 @@ namespace PerformanceMeter
         public virtual void Changed()
         {
             // Do stuff when the config is changed.
+            Logger.log.Debug("Updated configuration");
         }
 
         /// <summary>

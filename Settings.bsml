@@ -1,0 +1,4 @@
+﻿<settings-container>
+  <checkbox-setting text='Enabled' value='enabled' hover-hint='Enable the PerformanceMeter mod' />
+  <dropdown-list-setting text='Mode' value='mode' choices='mode-options' hover-hint='Change what data type PerformanceMeter uses' />
+</settings-container>

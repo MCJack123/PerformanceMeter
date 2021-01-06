@@ -14,6 +14,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using IPALogger = IPA.Logging.Logger;
 using BS_Utils.Utilities;
+using BeatSaberMarkupLanguage.Settings;
 
 namespace PerformanceMeter
 {
@@ -40,9 +41,11 @@ namespace PerformanceMeter
         [OnStart]
         public void OnApplicationStart() {
             Logger.log.Debug("OnApplicationStart");
-            new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
+            GameObject gameobj = new GameObject("PerformanceMeterController");
+            gameobj.AddComponent<PerformanceMeterController>();
             BSEvents.gameSceneActive += GameSceneActive;
             SceneManager.activeSceneChanged += ActiveSceneChanged;
+            BSMLSettings.instance.AddSettingsMenu("PerformanceMeter", "PerformanceMeter.Settings", Settings.instance);
         }
 
         [OnExit]

@@ -175,7 +175,8 @@ namespace PerformanceMeter {
         }
 
         private void NoteHit(NoteData data, NoteCutInfo info, int score) {
-            (new CutScoreBuffer(info, 1)).didFinishEvent += RecordHitValue;
+            if (info == null || info.swingRatingCounter == null) RecordHitValue(null);
+            else (new CutScoreBuffer(info, 1)).didFinishEvent += RecordHitValue;
         }
 
         private void NoteMiss(NoteData data, int score) {

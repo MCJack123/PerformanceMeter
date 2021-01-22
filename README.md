@@ -4,10 +4,10 @@ A Beat Saber mod to show a graph of your energy bar or percentage level througho
 ![Image](screenshot.png)
 
 ## Requirements
-* Beat Saber 1.13.0 or compatible
-* BSIPA 4.1.3 or later
-* Beat Saber Utils 1.6.5 or later
-* BeatSaberMarkupLanguage 1.4.2 or later
+* Beat Saber 1.13.2 or compatible
+* BSIPA 4.1.4 or later
+* Beat Saber Utils 1.7.0 or later
+* BeatSaberMarkupLanguage 1.4.5 or later
 
 ## Installation
 Simply drop the latest PerformanceMeter.dll plugin file into your Plugins folder, inside the main Beat Saber installation directory.
@@ -21,7 +21,7 @@ You can change the type of data PerformanceMeter records in the Mod Settings. Se
 ### UI
 PerformanceMeter can be configured in the Mod Settings section of the options. Here you can enable/disable PerformanceMeter, as well as change the mode.
 
-These are the modes available as of 1.0.0:
+These are the modes available as of 1.1.0:
 
 #### Energy
 This mode records the level of the energy bar on every note hit or miss.

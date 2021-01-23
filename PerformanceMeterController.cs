@@ -16,10 +16,6 @@ using UnityEngine.UI;
 using TMPro;
 
 namespace PerformanceMeter {
-    /// <summary>
-    /// Monobehaviours (scripts) are added to GameObjects.
-    /// For a full list of Messages a Monobehaviour can receive from the game, see https://docs.unity3d.com/ScriptReference/MonoBehaviour.html.
-    /// </summary>
     public class PerformanceMeterController : MonoBehaviour {
         public static PerformanceMeterController instance { get; private set; }
         List<float> energyList = new List<float>();
@@ -76,18 +72,17 @@ namespace PerformanceMeter {
             graphObj.transform.SetParent(panel.transform);
             graphObj.transform.name = "GraphContainer";
             WindowGraph graph = panel.AddComponent<WindowGraph>();
-            graph.ShowGraph(energyList, false, true, true);
+            graph.ShowGraph(energyList);
 
             StartCoroutine(WaitForMenu());
         }
 
-        #region Monobehaviour Messages
         IEnumerator WaitForMenu() {
             bool loaded = false;
             if (endActions is StandardLevelGameplayManager) {
                 ResultsViewController resultsController = null;
                 while (!loaded) {
-                    if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<ResultsViewController>().FirstOrDefault();
+                    if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<ResultsViewController>().LastOrDefault();
                     if (resultsController != null) loaded = true;
                     else yield return new WaitForSeconds(0.1f);
                 }
@@ -98,7 +93,7 @@ namespace PerformanceMeter {
             } else {
                 MissionResultsViewController resultsController = null;
                 while (!loaded) {
-                    if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<MissionResultsViewController>().FirstOrDefault();
+                    if (resultsController == null) resultsController = Resources.FindObjectsOfTypeAll<MissionResultsViewController>().LastOrDefault();
                     if (resultsController != null) loaded = true;
                     else yield return new WaitForSeconds(0.1f);
                 }
@@ -134,10 +129,10 @@ namespace PerformanceMeter {
             if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) energyList.Add(0.5f);
 
             scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().LastOrDefault();
-            energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault();
-            rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().FirstOrDefault();
-            endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().FirstOrDefault();
-            if (endActions == null) endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().FirstOrDefault();
+            energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().LastOrDefault();
+            rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().LastOrDefault();
+            endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().LastOrDefault();
+            if (endActions == null) endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().LastOrDefault();
 
             if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) {
                 scoreController.noteWasCutEvent += NoteHit;
@@ -146,7 +141,7 @@ namespace PerformanceMeter {
                 endActions.levelFailedEvent += LevelFinished;
                 Logger.log.Debug("PerformanceMeter reloaded successfully");
             } else {
-                Logger.log.Error("Could not reload PerformanceMeter");
+                Logger.log.Error("Could not reload PerformanceMeter. This may occur when playing online - if so, disregard this message.");
                 scoreController = null;
                 energyCounter = null;
                 rankCounter = null;
@@ -187,6 +182,7 @@ namespace PerformanceMeter {
             if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) levelOk = true;
         }
 
+        #region Monobehaviour Messages
         /// <summary>
         /// Only ever called once, mainly used to initialize variables.
         /// </summary>

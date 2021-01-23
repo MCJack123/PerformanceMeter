@@ -17,6 +17,8 @@ Out of the box, PerformanceMeter displays a graph of the energy bar's status fro
 
 You can change the type of data PerformanceMeter records in the Mod Settings. See below for more information on how to do this.
 
+Note: PerformanceMeter only appears in Solo, Party, and Campaign game modes. It does not appear in online matches.
+
 ## Configuration
 ### UI
 PerformanceMeter can be configured in the Mod Settings section of the options. Here you can enable/disable PerformanceMeter, as well as change the mode.

@@ -15,9 +15,6 @@ using System.Linq;
 
 namespace PerformanceMeter {
     internal class Settings : PersistentSingleton<Settings> {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        //public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         [UIValue("mode-options")]
         public List<object> modeOptions = new object[] { "Energy", "Percentage (Modified)", "Percentage (Raw)", "Note Cut Value", "Average Cut Value" }.ToList();
 

@@ -47,6 +47,8 @@ namespace PerformanceMeter {
         [OnExit]
         public void OnApplicationQuit() {
             Logger.log.Debug("OnApplicationQuit");
+            BSEvents.gameSceneActive -= GameSceneActive;
+            SceneManager.activeSceneChanged -= ActiveSceneChanged;
         }
 
         void GameSceneActive() {

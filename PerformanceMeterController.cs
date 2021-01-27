@@ -116,10 +116,18 @@ namespace PerformanceMeter {
                 averageHitValue = 0.0f;
                 averageHitValueSize = 0;
             }
+            if (vc != null) {
+                vc.continueButtonPressedEvent -= DismissGraph;
+                vc.restartButtonPressedEvent -= DismissGraph;
+            }
         }
 
         void DismissGraph_Mission(MissionResultsViewController vc) {
             DismissGraph(null);
+            if (vc != null) {
+                vc.continueButtonPressedEvent -= DismissGraph_Mission;
+                vc.restartButtonPressedEvent -= DismissGraph_Mission;
+            }
         }
 
         public void GetControllers() {
@@ -167,6 +175,7 @@ namespace PerformanceMeter {
                 default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); return;
             }
             energyList.Add(newEnergy);
+            if (score != null) score.didFinishEvent -= RecordHitValue;
         }
 
         private void NoteHit(NoteData data, NoteCutInfo info, int score) {
@@ -179,7 +188,13 @@ namespace PerformanceMeter {
         }
 
         private void LevelFinished() {
-            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) levelOk = true;
+            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) {
+                levelOk = true;
+                scoreController.noteWasCutEvent -= NoteHit;
+                scoreController.noteWasMissedEvent -= NoteMiss;
+                endActions.levelFinishedEvent -= LevelFinished;
+                endActions.levelFailedEvent -= LevelFinished;
+            }
         }
 
         #region Monobehaviour Messages

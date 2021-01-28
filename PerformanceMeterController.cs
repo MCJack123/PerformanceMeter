@@ -126,7 +126,7 @@ namespace PerformanceMeter {
             DismissGraph(null);
             if (vc != null) {
                 vc.continueButtonPressedEvent -= DismissGraph_Mission;
-                vc.restartButtonPressedEvent -= DismissGraph_Mission;
+                vc.retryButtonPressedEvent -= DismissGraph_Mission;
             }
         }
 

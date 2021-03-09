@@ -4,10 +4,10 @@ A Beat Saber mod to show a graph of your energy bar or percentage level througho
 ![Image](screenshot.png)
 
 ## Requirements
-* Beat Saber 1.13.2 or compatible
+* Beat Saber 1.13.4 or compatible
 * BSIPA 4.1.4 or later
-* Beat Saber Utils 1.7.0 or later
-* BeatSaberMarkupLanguage 1.4.5 or later
+* Beat Saber Utils 1.?.? or later
+* BeatSaberMarkupLanguage 1.?.? or later
 
 ## Installation
 Simply drop the latest PerformanceMeter.dll plugin file into your Plugins folder, inside the main Beat Saber installation directory.
@@ -21,9 +21,11 @@ Note: PerformanceMeter only appears in Solo, Party, and Campaign game modes. It 
 
 ## Configuration
 ### UI
-PerformanceMeter can be configured in the Mod Settings section of the options. Here you can enable/disable PerformanceMeter, as well as change the mode.
+PerformanceMeter can be configured in the Mod Settings section of the options. Here you can enable/disable PerformanceMeter, change the mode and side for primary and secondary graphs, and toggle showing missed notes.
 
-These are the modes available as of 1.1.0:
+As of PerformanceMeter 1.2.0, two graphs can be displayed at the same time. These graphs will be displayed together on the Performance chart. To be able to discern the two graphs, it is recommended that you set the sides of each graph to different values to show them in different colors. Note that changing the sides of Cut Value modes will also change which hand is counted.
+
+These are the modes available as of 1.2.0:
 
 #### Energy
 This mode records the level of the energy bar on every note hit or miss.
@@ -81,6 +83,8 @@ This mode records the average score of all cuts up to the current one on every n
 | 79        | 60        | Red      |
 | 59        | 0         | Dark Red |
 
+More modes may be added in the future.
+
 ### JSON
 PerformanceMeter's configuration file is stored at `UserData\PerformanceMeter.json`. Here you can change some options regarding how PerformanceMeter looks and acts.
 
@@ -97,8 +101,22 @@ This changes what data PerformanceMeter records in-game. These are the mappings 
 | 2  | Percentage (Raw)      |
 | 3  | Note Cut Value        |
 | 4  | Average Cut Value     |
+| 5  | None                  |
 
-More modes may be added in the future.
+#### `side`
+This changes the side which PerformanceMeter records data for. This only changes collection for Cut Value-type modes, but it changes the colors for all modes.
+
+| ID | Side  | Color     |
+|----|-------|-----------|
+| 0  | Left  | Red       |
+| 1  | Right | Blue      |
+| 2  | Both  | No change |
+
+#### `secondaryMode`, `secondarySide`
+These function the same as `mode` and `side`, respectively, but display another line to be used with a different mode.
+
+#### `showMisses`
+This enables displaying vertical bars on the graph at each point a note is missed. When set to `false`, no bars will be displayed; when `true`, bars will be shown.
 
 ## License
-PerformanceMeter is licensed under the MIT license.
+PerformanceMeter is licensed under the MIT license. See LICENSE for more info.

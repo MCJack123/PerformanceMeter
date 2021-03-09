@@ -39,7 +39,7 @@ namespace PerformanceMeter {
             DashYObjects = new List<GameObject>();
         }
 
-        public void ShowGraph(List<float> valueList)
+        public void ShowGraph(List<Pair<float, float>> valueList, bool isSecondary, float xMaximum, Color overrideColor)
         {
             if (DotObjects != null)
             {
@@ -84,21 +84,21 @@ namespace PerformanceMeter {
             var yMaximum = 1.0f;
             var yMinimum = 0.0f;
 
-            var xSize = graphWidth / (valueList.Count + 1);
+            var xSize = graphWidth / xMaximum;
             var xIndex = 0;
 
             GameObject lastCircleGameObject = null;
             for (var i = 0; i < valueList.Count; i++)
             {
-                var xPosition = xSize + xIndex * xSize;
-                var yPosition = (valueList[i] - yMinimum) / (yMaximum - yMinimum) * graphHeight;
+                var xPosition = valueList[i].first * xSize;
+                var yPosition = (valueList[i].second - yMinimum) / (yMaximum - yMinimum) * graphHeight;
                 var circleGameObject = CreateCircle(new Vector2(xPosition, yPosition), false);
                 DotObjects.Add(circleGameObject);
                 if (lastCircleGameObject != null)
                 {
                     var dotConnectionGameObject = CreateDotConnection(lastCircleGameObject.GetComponent<RectTransform>().anchoredPosition,
                                                                       circleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      true, graphHeight);
+                                                                      true, graphHeight, isSecondary, overrideColor);
                     LinkObjects.Add(dotConnectionGameObject);
                 }
                 lastCircleGameObject = circleGameObject;
@@ -121,37 +121,40 @@ namespace PerformanceMeter {
             return gameObject;
         }
 
-        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight)
+        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight, bool isSecondary, Color overrideColor)
         {
             var gameObject = new GameObject("DotConnection", typeof(Image));
             gameObject.transform.SetParent(GraphContainer, false);
             var image = gameObject.GetComponent<Image>();
-            switch (PluginConfig.Instance.GetMode()) {
-                case PluginConfig.MeasurementMode.Energy:
-                    if (dotPositionB.y / graphHeight <= 1.0 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.green;
-                    else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.25) image.color = Color.yellow;
-                    else if (dotPositionB.y / graphHeight < 0.25 && dotPositionB.y / graphHeight >= 0) image.color = Color.red;
-                    else image.color = Color.white;
-                    break;
-                case PluginConfig.MeasurementMode.PercentModified:
-                case PluginConfig.MeasurementMode.PercentRaw:
-                    if (dotPositionB.y / graphHeight < 0.9 && dotPositionB.y / graphHeight >= 0.8) image.color = Color.white;
-                    else if (dotPositionB.y / graphHeight < 0.8 && dotPositionB.y / graphHeight >= 0.65) image.color = Color.green;
-                    else if (dotPositionB.y / graphHeight < 0.65 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.yellow;
-                    else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.35) image.color = new Color(1.0f, 0.5f, 0.0f, 1.0f);
-                    else if (dotPositionB.y / graphHeight < 0.35) image.color = Color.red;
-                    else image.color = Color.cyan;
-                    break;
-                case PluginConfig.MeasurementMode.CutValue:
-                case PluginConfig.MeasurementMode.AvgCutValue:
-                    if (dotPositionB.y / graphHeight == 1.0) image.color = Color.white;
-                    else if (dotPositionB.y / graphHeight < 1.0 && dotPositionB.y / graphHeight >= 101.0/115.0) image.color = Color.green;
-                    else if (dotPositionB.y / graphHeight < 101.0/115.0 && dotPositionB.y / graphHeight >= 90.0/115.0) image.color = Color.yellow;
-                    else if (dotPositionB.y / graphHeight < 90.0/115.0 && dotPositionB.y / graphHeight >= 80.0/115.0) image.color = new Color(1.0f, 0.6f, 0.0f);
-                    else if (dotPositionB.y / graphHeight < 80.0/115.0 && dotPositionB.y / graphHeight >= 60.0/115.0) image.color = Color.red;
-                    else if (dotPositionB.y / graphHeight < 60.0/115.0 && dotPositionB.y / graphHeight >= 0.0) image.color = new Color(0.5f, 0.0f, 0.0f);
-                    else image.color = Color.cyan;
-                    break;
+            if (overrideColor != Color.white /* null */) image.color = overrideColor;
+            else {
+                switch (PluginConfig.Instance.GetMode(isSecondary)) {
+                    case PluginConfig.MeasurementMode.Energy:
+                        if (dotPositionB.y / graphHeight <= 1.0 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.green;
+                        else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.25) image.color = Color.yellow;
+                        else if (dotPositionB.y / graphHeight < 0.25 && dotPositionB.y / graphHeight >= 0) image.color = Color.red;
+                        else image.color = Color.white;
+                        break;
+                    case PluginConfig.MeasurementMode.PercentModified:
+                    case PluginConfig.MeasurementMode.PercentRaw:
+                        if (dotPositionB.y / graphHeight < 0.9 && dotPositionB.y / graphHeight >= 0.8) image.color = Color.white;
+                        else if (dotPositionB.y / graphHeight < 0.8 && dotPositionB.y / graphHeight >= 0.65) image.color = Color.green;
+                        else if (dotPositionB.y / graphHeight < 0.65 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.yellow;
+                        else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.35) image.color = new Color(1.0f, 0.5f, 0.0f, 1.0f);
+                        else if (dotPositionB.y / graphHeight < 0.35) image.color = Color.red;
+                        else image.color = Color.cyan;
+                        break;
+                    case PluginConfig.MeasurementMode.CutValue:
+                    case PluginConfig.MeasurementMode.AvgCutValue:
+                        if (dotPositionB.y / graphHeight == 1.0) image.color = Color.white;
+                        else if (dotPositionB.y / graphHeight < 1.0 && dotPositionB.y / graphHeight >= 101.0/115.0) image.color = Color.green;
+                        else if (dotPositionB.y / graphHeight < 101.0/115.0 && dotPositionB.y / graphHeight >= 90.0/115.0) image.color = Color.yellow;
+                        else if (dotPositionB.y / graphHeight < 90.0/115.0 && dotPositionB.y / graphHeight >= 80.0/115.0) image.color = new Color(1.0f, 0.6f, 0.0f);
+                        else if (dotPositionB.y / graphHeight < 80.0/115.0 && dotPositionB.y / graphHeight >= 60.0/115.0) image.color = Color.red;
+                        else if (dotPositionB.y / graphHeight < 60.0/115.0 && dotPositionB.y / graphHeight >= 0.0) image.color = new Color(0.5f, 0.0f, 0.0f);
+                        else image.color = Color.cyan;
+                        break;
+                }
             }
             image.enabled = makeLinkVisible;
             var rectTransform = gameObject.GetComponent<RectTransform>();

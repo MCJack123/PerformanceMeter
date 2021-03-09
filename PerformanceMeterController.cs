@@ -16,11 +16,22 @@ using UnityEngine.UI;
 using TMPro;
 
 namespace PerformanceMeter {
+    public struct Pair<T, U> {
+        public T first;
+        public U second;
+        public Pair(T a, U b) {first = a; second = b;}
+    }
+
     public class PerformanceMeterController : MonoBehaviour {
         public static PerformanceMeterController instance { get; private set; }
-        List<float> energyList = new List<float>();
+
+        List<Pair<float, float>> energyList = new List<Pair<float, float>>();
+        List<Pair<float, float>> secondaryEnergyList = new List<Pair<float, float>>();
+        List<float> misses = new List<float>();
         float averageHitValue = 0.0f;
         int averageHitValueSize = 0;
+        float secondaryAverageHitValue = 0.0f;
+        int secondaryAverageHitValueSize = 0;
         ScoreController scoreController;
         GameEnergyCounter energyCounter;
         RelativeScoreAndImmediateRankCounter rankCounter;
@@ -31,7 +42,7 @@ namespace PerformanceMeter {
         public void ShowResults() {
             if (!levelOk) return;
             levelOk = false;
-            Logger.log.Debug("Found " + energyList.Count() + " notes");
+            Logger.log.Debug("Found " + energyList.Count() + " primary notes, " + secondaryEnergyList.Count() + " secondary notes");
 
             panel = new GameObject("PerformanceMeter");
             panel.transform.Rotate(22.5f, 0, 0, Space.World);
@@ -71,8 +82,54 @@ namespace PerformanceMeter {
             graphObj.transform.Rotate(22.5f, 0, 0, Space.World);
             graphObj.transform.SetParent(panel.transform);
             graphObj.transform.name = "GraphContainer";
-            WindowGraph graph = panel.AddComponent<WindowGraph>();
-            graph.ShowGraph(energyList);
+
+            float width = 0;
+            if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None && PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None) {
+                if (energyList[energyList.Count-1].first > secondaryEnergyList[secondaryEnergyList.Count-1].first) {
+                    width = energyList[energyList.Count-1].first;
+                    secondaryEnergyList.Add(new Pair<float, float>(width, secondaryEnergyList[secondaryEnergyList.Count-1].second));
+                } else if (secondaryEnergyList[secondaryEnergyList.Count-1].first > energyList[energyList.Count-1].first) {
+                    width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
+                    energyList.Add(new Pair<float, float>(width, energyList[energyList.Count-1].second));
+                } else width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
+            } else if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None) width = energyList[energyList.Count-1].first;
+            else if (PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None) width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
+
+            if (width > 0) {
+                if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None) {
+                    WindowGraph graph = panel.AddComponent<WindowGraph>();
+                    PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(false);
+                    graph.ShowGraph(energyList, false, width, side == PluginConfig.MeasurementSide.Left ? Color.red : (side == PluginConfig.MeasurementSide.Right ? Color.blue : Color.white /* null */));
+                }
+                if (PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None) {
+                    WindowGraph graph = panel.AddComponent<WindowGraph>();
+                    PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(true);
+                    graph.ShowGraph(secondaryEnergyList, true, width, side == PluginConfig.MeasurementSide.Left ? Color.red : (side == PluginConfig.MeasurementSide.Right ? Color.blue : Color.white /* null */));
+                }
+            
+                if (PluginConfig.Instance.showMisses) {
+                    var GraphTransform = graphObj.GetComponent<RectTransform>();
+                    var xSize = GraphTransform.sizeDelta.x / width;
+                    var ySize = GraphTransform.sizeDelta.y;
+                    foreach (float pos in misses) {
+                        var xPosition = pos * xSize;
+                        var dotPositionA = new Vector2(xPosition, 0);
+                        var dotPositionB = new Vector2(xPosition, ySize);
+                        var gameObject = new GameObject("DotConnection", typeof(Image));
+                        gameObject.transform.SetParent(GraphTransform, false);
+                        var image = gameObject.GetComponent<Image>();
+                        image.color = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                        var rectTransform = gameObject.GetComponent<RectTransform>();
+                        var dir = (dotPositionB - dotPositionA).normalized;
+                        var distance = Vector2.Distance(dotPositionA, dotPositionB);
+                        rectTransform.anchorMin = new Vector2(0, 0);
+                        rectTransform.anchorMax = new Vector2(0, 0);
+                        rectTransform.sizeDelta = new Vector2(distance, 0.0025f);
+                        rectTransform.anchoredPosition = dotPositionA + dir * distance * .5f;
+                        rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+                    }
+                }
+            } else Logger.log.Warn("Both modes are set to None - the graph will be empty!");
 
             StartCoroutine(WaitForMenu());
         }
@@ -133,8 +190,13 @@ namespace PerformanceMeter {
         public void GetControllers() {
             averageHitValue = 0.0f;
             averageHitValueSize = 0;
+            secondaryAverageHitValue = 0.0f;
+            secondaryAverageHitValueSize = 0;
             energyList.Clear();
-            if (PluginConfig.Instance.GetMode() == PluginConfig.MeasurementMode.Energy) energyList.Add(0.5f);
+            secondaryEnergyList.Clear();
+            misses.Clear();
+            if (PluginConfig.Instance.GetMode(false) == PluginConfig.MeasurementMode.Energy) energyList.Add(new Pair<float, float>(0.0f, 0.5f));
+            if (PluginConfig.Instance.GetMode(true) == PluginConfig.MeasurementMode.Energy) secondaryEnergyList.Add(new Pair<float, float>(0.0f, 0.5f));
 
             scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().LastOrDefault();
             energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().LastOrDefault();
@@ -159,9 +221,11 @@ namespace PerformanceMeter {
             }
         }
 
-        private void RecordHitValue(CutScoreBuffer score) {
+        private void RecordHitValue(CutScoreBuffer score, NoteData data, System.Action<CutScoreBuffer> fn) {
+            if (score == null) misses.Add(data.time);
             float newEnergy;
-            switch (PluginConfig.Instance.GetMode()) {
+            switch (PluginConfig.Instance.GetMode(false)) {
+                case PluginConfig.MeasurementMode.None: return;
                 case PluginConfig.MeasurementMode.Energy: newEnergy = energyCounter.energy; break;
                 case PluginConfig.MeasurementMode.PercentModified: newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore; break;
                 case PluginConfig.MeasurementMode.PercentRaw: newEnergy = rankCounter.relativeScore; break;
@@ -174,17 +238,54 @@ namespace PerformanceMeter {
                     break;
                 default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); return;
             }
-            energyList.Add(newEnergy);
-            if (score != null) score.didFinishEvent -= RecordHitValue;
+            if (energyList.Count == 0) energyList.Add(new Pair<float, float>(0, newEnergy));
+            energyList.Add(new Pair<float, float>(data.time, newEnergy));
+            if (score != null) score.didFinishEvent -= fn;
+        }
+
+        private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, System.Action<CutScoreBuffer> fn) {
+            float newEnergy;
+            switch (PluginConfig.Instance.GetMode(true)) {
+                case PluginConfig.MeasurementMode.None: return;
+                case PluginConfig.MeasurementMode.Energy: newEnergy = energyCounter.energy; break;
+                case PluginConfig.MeasurementMode.PercentModified: newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore; break;
+                case PluginConfig.MeasurementMode.PercentRaw: newEnergy = rankCounter.relativeScore; break;
+                case PluginConfig.MeasurementMode.CutValue: if (score == null) return; newEnergy = score.scoreWithMultiplier / 115.0f; break;
+                case PluginConfig.MeasurementMode.AvgCutValue:
+                    if (score == null) return;
+                    if (secondaryAverageHitValueSize == 0) { secondaryAverageHitValue = score.scoreWithMultiplier / 115.0f; secondaryAverageHitValueSize++; }
+                    else secondaryAverageHitValue = ((secondaryAverageHitValue * secondaryAverageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++secondaryAverageHitValueSize;
+                    newEnergy = secondaryAverageHitValue;
+                    break;
+                default: Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); return;
+            }
+            if (secondaryEnergyList.Count == 0) secondaryEnergyList.Add(new Pair<float, float>(0, newEnergy));
+            secondaryEnergyList.Add(new Pair<float, float>(data.time, newEnergy));
+            if (score != null) score.didFinishEvent -= fn;
+            else misses.Add(data.time);
         }
 
         private void NoteHit(NoteData data, NoteCutInfo info, int score) {
-            if (info == null || info.swingRatingCounter == null) RecordHitValue(null);
-            else (new CutScoreBuffer(info, 1)).didFinishEvent += RecordHitValue;
+            PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(false);
+            if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
+                if (info == null || info.swingRatingCounter == null) RecordHitValue(null, data, null);
+                else {
+                    void fn(CutScoreBuffer buf) => RecordHitValue(buf, data, fn);
+                    (new CutScoreBuffer(info, 1)).didFinishEvent += fn;
+                }
+            }
+            side = PluginConfig.Instance.GetSide(true);
+            if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
+                if (info == null || info.swingRatingCounter == null) RecordHitValueSecondary(null, data, null);
+                else {
+                    void fn(CutScoreBuffer buf) => RecordHitValueSecondary(buf, data, fn);
+                    (new CutScoreBuffer(info, 1)).didFinishEvent += fn;
+                }
+            }
         }
 
         private void NoteMiss(NoteData data, int score) {
-            RecordHitValue(null);
+            RecordHitValue(null, data, null);
         }
 
         private void LevelFinished() {

@@ -16,16 +16,28 @@ namespace PerformanceMeter {
     public class PluginConfig {
         public static PluginConfig Instance { get; set; }
         public virtual bool enabled { get; set; } = true;
-        public virtual int mode { get; set; } = (int)MeasurementMode.Energy; // Must be 'virtual' if you want BSIPA to detect a value change and save the config automatically.
-        internal MeasurementMode GetMode() { return (MeasurementMode)mode; }
+        public virtual int mode { get; set; } = (int)MeasurementMode.Energy;
+        public virtual int side { get; set; } = (int)MeasurementSide.Both;
+        public virtual int secondaryMode { get; set; } = (int)MeasurementMode.None;
+        public virtual int secondarySide { get; set; } = (int)MeasurementSide.Both;
+        public virtual bool showMisses { get; set; } = false;
+        internal MeasurementMode GetMode(bool sec) { return (MeasurementMode)(sec ? secondaryMode : mode); }
+        internal MeasurementSide GetSide(bool sec) { return (MeasurementSide)(sec ? secondarySide : side); }
 
         public enum MeasurementMode {
             Energy,
             PercentModified,
             PercentRaw,
             CutValue,
-            AvgCutValue
+            AvgCutValue,
+            None
         };
+
+        public enum MeasurementSide {
+            Left,
+            Right,
+            Both
+        }
 
         /// <summary>
         /// This is called whenever BSIPA reads the config from disk (including when file changes are detected).

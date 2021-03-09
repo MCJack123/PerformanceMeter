@@ -1,4 +1,8 @@
 ﻿<settings-container>
   <checkbox-setting text='Enabled' value='enabled' hover-hint='Enable the PerformanceMeter mod' />
   <dropdown-list-setting text='Mode' value='mode' choices='mode-options' hover-hint='Change what data type PerformanceMeter uses' />
+  <dropdown-list-setting text='Side' value='side' choices='side-options' hover-hint='Change what side data is collected for - this only affects Cut Value modes' />
+  <dropdown-list-setting text='Secondary Mode' value='secondaryMode' choices='secondary-mode-options' hover-hint='Change what data type PerformanceMeter uses (secondary slot)' />
+  <dropdown-list-setting text='Secondary Side' value='secondarySide' choices='side-options' hover-hint='Change what side data is collected for - this only affects Cut Value modes (secondary slot)' />
+  <checkbox-setting text='Show Misses' value='showMisses' hover-hint='Show lines on the graph where notes were missed' />
 </settings-container>

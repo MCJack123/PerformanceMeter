@@ -14,6 +14,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using IPA.Utilities;
+using System.Reflection;
 
 namespace PerformanceMeter {
     public struct Pair<T, U> {
@@ -38,6 +40,7 @@ namespace PerformanceMeter {
         GameObject panel;
         ILevelEndActions endActions;
         bool levelOk = false;
+        MethodInfo CutScoreBuffer_Init;
 
         public void ShowResults() {
             if (!levelOk) return;
@@ -67,7 +70,7 @@ namespace PerformanceMeter {
             textObj.transform.SetParent(canvas.transform);
             textObj.transform.Rotate(22.5f, 0, 0, Space.World);
             HMUI.CurvedTextMeshPro text = textObj.AddComponent<HMUI.CurvedTextMeshPro>();
-            text.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF No Glow"));
+            text.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF"));
             text.fontSize = 9.0f;
             text.alignment = TextAlignmentOptions.Right;
             text.text = "Performance";
@@ -75,6 +78,20 @@ namespace PerformanceMeter {
             text.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
             text.GetComponent<RectTransform>().localPosition = new Vector3(-0.3f, -0.25f, 0.1f);
             text.GetComponent<RectTransform>().sizeDelta = new Vector2(75.0f, 25.0f);
+
+            GameObject textObj2 = new GameObject("Label");
+            textObj2.transform.SetParent(canvas.transform);
+            textObj2.transform.Rotate(22.5f, 0, 0, Space.World);
+            HMUI.CurvedTextMeshPro text2 = textObj2.AddComponent<HMUI.CurvedTextMeshPro>();
+            text2.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF"));
+            text2.fontSize = 9.0f;
+            text2.alignment = TextAlignmentOptions.Right;
+            text2.text = "By JackMacWindows#9776";
+            text2.color = new Color(0.3f, 0.3f, 0.3f);
+            text2.enableAutoSizing = true;
+            text2.transform.localScale = new Vector3(0.002f, 0.002f, 0.002f);
+            text2.GetComponent<RectTransform>().localPosition = new Vector3(0.31f, -0.2625f, 0.1f);
+            text2.GetComponent<RectTransform>().sizeDelta = new Vector2(175.0f, 16.0f);
 
             GameObject graphObj = new GameObject("GraphContainer");
             graphObj.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.45f, 2.275f);
@@ -84,7 +101,7 @@ namespace PerformanceMeter {
             graphObj.transform.name = "GraphContainer";
 
             float width = 0;
-            if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None && PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None) {
+            if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None && PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None && energyList.Count > 0 && secondaryEnergyList.Count > 0) {
                 if (energyList[energyList.Count-1].first > secondaryEnergyList[secondaryEnergyList.Count-1].first) {
                     width = energyList[energyList.Count-1].first;
                     secondaryEnergyList.Add(new Pair<float, float>(width, secondaryEnergyList[secondaryEnergyList.Count-1].second));
@@ -92,8 +109,8 @@ namespace PerformanceMeter {
                     width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
                     energyList.Add(new Pair<float, float>(width, energyList[energyList.Count-1].second));
                 } else width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
-            } else if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None) width = energyList[energyList.Count-1].first;
-            else if (PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None) width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
+            } else if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None && energyList.Count > 0) width = energyList[energyList.Count-1].first;
+            else if (PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None && secondaryEnergyList.Count > 0) width = secondaryEnergyList[secondaryEnergyList.Count-1].first;
 
             if (width > 0) {
                 if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None) {
@@ -106,7 +123,7 @@ namespace PerformanceMeter {
                     PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(true);
                     graph.ShowGraph(secondaryEnergyList, true, width, side == PluginConfig.MeasurementSide.Left ? Color.red : (side == PluginConfig.MeasurementSide.Right ? Color.blue : Color.white /* null */));
                 }
-            
+
                 if (PluginConfig.Instance.showMisses) {
                     var GraphTransform = graphObj.GetComponent<RectTransform>();
                     var xSize = GraphTransform.sizeDelta.x / width;
@@ -221,7 +238,18 @@ namespace PerformanceMeter {
             }
         }
 
-        private void RecordHitValue(CutScoreBuffer score, NoteData data, System.Action<CutScoreBuffer> fn) {
+        private class ScoreFinishEventHandler : ICutScoreBufferDidFinishEvent {
+            private PerformanceMeterController controller;
+            private NoteData data;
+            private bool secondary;
+            internal ScoreFinishEventHandler(PerformanceMeterController c, NoteData d, bool s) {controller = c; data = d; secondary = s;}
+            public void HandleCutScoreBufferDidFinish(CutScoreBuffer cutScoreBuffer) {
+                if (secondary) controller.RecordHitValueSecondary(cutScoreBuffer, data, this);
+                else controller.RecordHitValue(cutScoreBuffer, data, this);
+            }
+        }
+
+        private void RecordHitValue(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
             if (score == null) misses.Add(data.time);
             float newEnergy;
             switch (PluginConfig.Instance.GetMode(false)) {
@@ -240,10 +268,11 @@ namespace PerformanceMeter {
             }
             if (energyList.Count == 0) energyList.Add(new Pair<float, float>(0, newEnergy));
             energyList.Add(new Pair<float, float>(data.time, newEnergy));
-            if (score != null) score.didFinishEvent -= fn;
+            if (score != null) score.didFinishEvent.Remove(fn);
         }
 
-        private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, System.Action<CutScoreBuffer> fn) {
+        private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
+            if (score == null) misses.Add(data.time);
             float newEnergy;
             switch (PluginConfig.Instance.GetMode(true)) {
                 case PluginConfig.MeasurementMode.None: return;
@@ -261,25 +290,51 @@ namespace PerformanceMeter {
             }
             if (secondaryEnergyList.Count == 0) secondaryEnergyList.Add(new Pair<float, float>(0, newEnergy));
             secondaryEnergyList.Add(new Pair<float, float>(data.time, newEnergy));
-            if (score != null) score.didFinishEvent -= fn;
-            else misses.Add(data.time);
+            if (score != null) score.didFinishEvent.Remove(fn);
         }
 
-        private void NoteHit(NoteData data, NoteCutInfo info, int score) {
+        /*
+         * So, you may notice that I do some wonky stuff involving reflection here.
+         * This is because of some sort of bug (compiler or otherwise) that causes a
+         * CS0570 error, complaining that CutScoreBuffer.Init is not accessible in the
+         * current language. Obviously, since Beat Saber is written in C# and is not
+         * run through IL2CPP, this is incorrect. The only way I've been able to get
+         * CutScoreBuffer.Init working is by dynamically calling the method from the
+         * main assembly through reflection. Now normally I'd use BSIPA's ReflectionUtil,
+         * but unfortunately this is not possible due to Init returning void, which
+         * is not a valid type to add to generic parameters, and there is no version
+         * of ReflectionUtil.InvokeMethod that doesn't return a value. Therefore, I
+         * have to instead read the method manually (which is cached in OnAwake), and
+         * then call it as a MethodInfo variable instead of the normal way as a member
+         * of the object.
+         * 
+         * This workaround is horrible, and I hate to put it in production code, but
+         * it doesn't look like there's any better way around this issue. Maybe I'll
+         * try submitting an issue to VS/Roslyn, but due to the nature of this issue
+         * (one specific function in the code of a copyrighted game), it'll be
+         * difficult to provide proper reproduction instructions. Some vague pointers
+         * about things I notice are about all I could provide.
+         */
+
+        private void NoteHit(NoteData data, in NoteCutInfo info, int multiplier) {
             PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(false);
             if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
-                if (info == null || info.swingRatingCounter == null) RecordHitValue(null, data, null);
+                if (info.swingRatingCounter == null) RecordHitValue(null, data, null);
                 else {
-                    void fn(CutScoreBuffer buf) => RecordHitValue(buf, data, fn);
-                    (new CutScoreBuffer(info, 1)).didFinishEvent += fn;
+                    ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, data, false);
+                    CutScoreBuffer buf = new CutScoreBuffer();
+                    CutScoreBuffer_Init?.Invoke(buf, new object[2] {info, 1}); //buf.Init(info, 1);
+                    buf.didFinishEvent.Add(handler);
                 }
             }
             side = PluginConfig.Instance.GetSide(true);
             if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
-                if (info == null || info.swingRatingCounter == null) RecordHitValueSecondary(null, data, null);
+                if (info.swingRatingCounter == null) RecordHitValueSecondary(null, data, null);
                 else {
-                    void fn(CutScoreBuffer buf) => RecordHitValueSecondary(buf, data, fn);
-                    (new CutScoreBuffer(info, 1)).didFinishEvent += fn;
+                    ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, data, true);
+                    CutScoreBuffer buf = new CutScoreBuffer();
+                    CutScoreBuffer_Init?.Invoke(buf, new object[2] {info, 1}); //buf.Init(info, 1);
+                    buf.didFinishEvent.Add(handler);
                 }
             }
         }
@@ -312,6 +367,9 @@ namespace PerformanceMeter {
             }
             DontDestroyOnLoad(this); // Don't destroy this object on scene changes
             instance = this;
+            // See comment above about why we do this
+            CutScoreBuffer_Init = typeof(CutScoreBuffer).GetMethod("Init", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            if (CutScoreBuffer_Init == null) Logger.log.Critical("Could not get Init method! PerformanceMeter will not be able to function.");
             Logger.log?.Debug($"{name}: Awake()");
         }
       

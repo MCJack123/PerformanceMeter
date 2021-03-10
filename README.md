@@ -1,13 +1,13 @@
 ﻿# PerformanceMeter
-A Beat Saber mod to show a graph of your energy bar or percentage level throughout a map on the end screen.
+A Beat Saber mod to show a graph of your energy bar, percentage level, or cut value throughout a map on the end screen.
 
 ![Image](screenshot.png)
 
 ## Requirements
 * Beat Saber 1.13.4 or compatible
 * BSIPA 4.1.4 or later
-* Beat Saber Utils 1.?.? or later
-* BeatSaberMarkupLanguage 1.?.? or later
+* Beat Saber Utils 1.8.0 or later
+* BeatSaberMarkupLanguage 1.5.1 or later
 
 ## Installation
 Simply drop the latest PerformanceMeter.dll plugin file into your Plugins folder, inside the main Beat Saber installation directory.

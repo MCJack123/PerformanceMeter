@@ -174,7 +174,7 @@ namespace PerformanceMeter {
 
                 yield return new WaitForSeconds(0.1f);
                 resultsController.continueButtonPressedEvent += DismissGraph_Mission;
-                resultsController.retryButtonPressedEvent += DismissGraph_Mission;
+                resultsController.retryButtonPressedEvent += DismissGraph_Mission;  
             }
             Logger.log.Debug("PerformanceMeter menu created successfully");
         }
@@ -205,6 +205,8 @@ namespace PerformanceMeter {
         }
 
         public void GetControllers() {
+            DismissGraph(null);
+            levelOk = false;
             averageHitValue = 0.0f;
             averageHitValueSize = 0;
             secondaryAverageHitValue = 0.0f;

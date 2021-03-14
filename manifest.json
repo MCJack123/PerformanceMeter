@@ -3,7 +3,7 @@
   "id": "PerformanceMeter",
   "name": "PerformanceMeter",
   "author": "JackMacWindows",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Shows a graph of your energy bar, percentage level, or cut value throughout a map on the end screen.",
   "gameVersion": "1.13.4",
   "dependsOn": {

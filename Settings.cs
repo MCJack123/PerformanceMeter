@@ -48,15 +48,15 @@ namespace PerformanceMeter {
             for (int i = 0; i < modeOptions.Count; i++) {
                 if (modeOptions[i] as string == listChoice) {
                     PluginConfig.Instance.mode = i >= (int)PluginConfig.MeasurementMode.None ? i + 1 : i;
-                    ok++;
+                    break;
                 }
+            }
+            for (int i = 0; i < secondaryModeOptions.Count; i++) {
                 if (secondaryModeOptions[i] as string == secondaryListChoice) {
                     PluginConfig.Instance.secondaryMode = i;
-                    ok++;
+                    break;
                 }
-                if (ok >= 2) break;
             }
-            ok = 0;
             for (int i = 0; i < sideOptions.Count; i++) {
                 if (sideOptions[i] as string == sideChoice) {
                     PluginConfig.Instance.side = i;
@@ -74,7 +74,7 @@ namespace PerformanceMeter {
         Settings() {
             listChoice = modeOptions[PluginConfig.Instance.mode] as string;
             sideChoice = sideOptions[PluginConfig.Instance.side] as string;
-            secondaryListChoice = modeOptions[PluginConfig.Instance.secondaryMode] as string;
+            secondaryListChoice = secondaryModeOptions[PluginConfig.Instance.secondaryMode] as string;
             secondarySideChoice = sideOptions[PluginConfig.Instance.secondarySide] as string;
         }
     }

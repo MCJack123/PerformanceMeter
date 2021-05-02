@@ -14,8 +14,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using IPA.Utilities;
-using System.Reflection;
 
 namespace PerformanceMeter {
     public struct Pair<T, U> {
@@ -40,7 +38,6 @@ namespace PerformanceMeter {
         GameObject panel;
         ILevelEndActions endActions;
         bool levelOk = false;
-        MethodInfo CutScoreBuffer_Init;
 
         public void ShowResults() {
             if (!levelOk) return;
@@ -295,29 +292,6 @@ namespace PerformanceMeter {
             if (score != null) score.didFinishEvent.Remove(fn);
         }
 
-        /*
-         * So, you may notice that I do some wonky stuff involving reflection here.
-         * This is because of some sort of bug (compiler or otherwise) that causes a
-         * CS0570 error, complaining that CutScoreBuffer.Init is not accessible in the
-         * current language. Obviously, since Beat Saber is written in C# and is not
-         * run through IL2CPP, this is incorrect. The only way I've been able to get
-         * CutScoreBuffer.Init working is by dynamically calling the method from the
-         * main assembly through reflection. Now normally I'd use BSIPA's ReflectionUtil,
-         * but unfortunately this is not possible due to Init returning void, which
-         * is not a valid type to add to generic parameters, and there is no version
-         * of ReflectionUtil.InvokeMethod that doesn't return a value. Therefore, I
-         * have to instead read the method manually (which is cached in OnAwake), and
-         * then call it as a MethodInfo variable instead of the normal way as a member
-         * of the object.
-         * 
-         * This workaround is horrible, and I hate to put it in production code, but
-         * it doesn't look like there's any better way around this issue. Maybe I'll
-         * try submitting an issue to VS/Roslyn, but due to the nature of this issue
-         * (one specific function in the code of a copyrighted game), it'll be
-         * difficult to provide proper reproduction instructions. Some vague pointers
-         * about things I notice are about all I could provide.
-         */
-
         private void NoteHit(NoteData data, in NoteCutInfo info, int multiplier) {
             PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(false);
             if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
@@ -325,7 +299,7 @@ namespace PerformanceMeter {
                 else {
                     ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, data, false);
                     CutScoreBuffer buf = new CutScoreBuffer();
-                    CutScoreBuffer_Init?.Invoke(buf, new object[2] {info, 1}); //buf.Init(info, 1);
+                    buf.Init(info, 1);
                     buf.didFinishEvent.Add(handler);
                 }
             }
@@ -335,7 +309,7 @@ namespace PerformanceMeter {
                 else {
                     ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, data, true);
                     CutScoreBuffer buf = new CutScoreBuffer();
-                    CutScoreBuffer_Init?.Invoke(buf, new object[2] {info, 1}); //buf.Init(info, 1);
+                    buf.Init(info, 1);
                     buf.didFinishEvent.Add(handler);
                 }
             }
@@ -369,9 +343,6 @@ namespace PerformanceMeter {
             }
             DontDestroyOnLoad(this); // Don't destroy this object on scene changes
             instance = this;
-            // See comment above about why we do this
-            CutScoreBuffer_Init = typeof(CutScoreBuffer).GetMethod("Init", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            if (CutScoreBuffer_Init == null) Logger.log.Critical("Could not get Init method! PerformanceMeter will not be able to function.");
             Logger.log?.Debug($"{name}: Awake()");
         }
       

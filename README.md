@@ -4,10 +4,10 @@ A Beat Saber mod to show a graph of your energy bar, percentage level, or cut va
 ![Image](screenshot.png)
 
 ## Requirements
-* Beat Saber 1.13.4 or compatible
-* BSIPA 4.1.4 or later
-* Beat Saber Utils 1.8.0 or later
-* BeatSaberMarkupLanguage 1.5.1 or later
+* Beat Saber 1.16.1 or compatible
+* BSIPA 4.1.6 or later
+* Beat Saber Utils 1.10.0 or later
+* BeatSaberMarkupLanguage 1.5.3 or later
 
 ## Installation
 Simply drop the latest PerformanceMeter.dll plugin file into your Plugins folder, inside the main Beat Saber installation directory.

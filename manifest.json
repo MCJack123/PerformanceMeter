@@ -3,13 +3,13 @@
   "id": "PerformanceMeter",
   "name": "PerformanceMeter",
   "author": "JackMacWindows",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Shows a graph of your energy bar, percentage level, or cut value throughout a map on the end screen.",
-  "gameVersion": "1.16.3",
+  "gameVersion": "1.17.0",
   "dependsOn": {
     "BSIPA": "^4.2.0",
     "BS Utils": "^1.11.0",
-    "BeatSaberMarkupLanguage": "^1.5.4"
+    "BeatSaberMarkupLanguage": "^1.5.5"
   },
   "features": [],
   "links": {

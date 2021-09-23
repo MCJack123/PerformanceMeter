@@ -40,10 +40,30 @@ namespace PerformanceMeter {
         [UIValue("showMisses")]
         public bool showMisses = PluginConfig.Instance.showMisses;
 
+        [UIValue("animationDuration")]
+        public float animationDuration = PluginConfig.Instance.animationDuration;
+
+        [UIValue("overrideColor")]
+        public bool overrideColor = PluginConfig.Instance.overrideColor;
+
+        [UIValue("overrideSecondaryColor")]
+        public bool overrideSecondaryColor = PluginConfig.Instance.overrideSecondaryColor;
+
+        [UIValue("color")]
+        public UnityEngine.Color color = PluginConfig.Instance.GetColor(false);
+
+        [UIValue("secondaryColor")]
+        public UnityEngine.Color secondaryColor = PluginConfig.Instance.GetColor(true);
+
         [UIAction("#apply")]
         public void OnApply() {
             PluginConfig.Instance.enabled = _enabled;
             PluginConfig.Instance.showMisses = showMisses;
+            PluginConfig.Instance.animationDuration = animationDuration;
+            PluginConfig.Instance.overrideColor = overrideColor;
+            PluginConfig.Instance.overrideSecondaryColor = overrideSecondaryColor;
+            PluginConfig.Instance.color = ((int)(color.r * 255) << 16) | ((int)(color.g * 255) << 8) | (int)(color.b * 255);
+            PluginConfig.Instance.secondaryColor = ((int)(secondaryColor.r * 255) << 16) | ((int)(secondaryColor.g * 255) << 8) | (int)(secondaryColor.b * 255);
             int ok = 0;
             for (int i = 0; i < modeOptions.Count; i++) {
                 if (modeOptions[i] as string == listChoice) {

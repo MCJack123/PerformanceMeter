@@ -4,10 +4,10 @@ A Beat Saber mod to show a graph of your energy bar, percentage level, or cut va
 ![Image](screenshot.png)
 
 ## Requirements
-* Beat Saber 1.16.1 or compatible
-* BSIPA 4.1.6 or later
-* Beat Saber Utils 1.10.0 or later
-* BeatSaberMarkupLanguage 1.5.3 or later
+* Beat Saber 1.18.0 or compatible
+* BSIPA 4.2.0 or later
+* Beat Saber Utils 1.11.0 or later
+* BeatSaberMarkupLanguage 1.5.5 or later
 
 ## Installation
 Simply drop the latest PerformanceMeter.dll plugin file into your Plugins folder, inside the main Beat Saber installation directory.
@@ -25,7 +25,7 @@ PerformanceMeter can be configured in the Mod Settings section of the options. H
 
 As of PerformanceMeter 1.2.0, two graphs can be displayed at the same time. These graphs will be displayed together on the Performance chart. To be able to discern the two graphs, it is recommended that you set the sides of each graph to different values to show them in different colors. Note that changing the sides of Cut Value modes will also change which hand is counted.
 
-These are the modes available as of 1.2.0:
+These are the modes available as of 1.3.0:
 
 #### Energy
 This mode records the level of the energy bar on every note hit or miss.
@@ -117,6 +117,15 @@ These function the same as `mode` and `side`, respectively, but display another 
 
 #### `showMisses`
 This enables displaying vertical bars on the graph at each point a note is missed. When set to `false`, no bars will be displayed; when `true`, bars will be shown.
+
+#### `animationDuration`
+This sets how long the graph reveal animation takes to complete. If set to 0, no animation will be played.
+
+#### `[secondary]Color`
+These set the color for each graph. Colors are 24-bit hexadecimal colors (e.g. `0xFF8000` is orange). This setting has no effect unless the corresponding `overrideColor` setting (below) is enabled.
+
+#### `override[Secondary]Color`
+These toggle whether the override color is enabled for each graph. If set to `true`, the color in `[secondary]Color` will be used; otherwise the default color will be used.
 
 ## License
 PerformanceMeter is licensed under the MIT license. See LICENSE for more info.

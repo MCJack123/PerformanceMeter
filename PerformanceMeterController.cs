@@ -90,11 +90,19 @@ namespace PerformanceMeter {
             text2.GetComponent<RectTransform>().localPosition = new Vector3(0.31f, -0.2625f, 0.1f);
             text2.GetComponent<RectTransform>().sizeDelta = new Vector2(175.0f, 16.0f);
 
+            GameObject graphMask = new GameObject("GraphMask");
+            graphMask.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.45f, 2.275f);
+            graphMask.GetComponent<RectTransform>().sizeDelta = new Vector2(1.0f, 0.45f);
+            graphMask.transform.Rotate(22.5f, 0, 0, Space.World);
+            graphMask.transform.SetParent(panel.transform);
+            graphMask.transform.name = "GraphMask";
+            graphMask.AddComponent<RectMask2D>();
+
             GameObject graphObj = new GameObject("GraphContainer");
             graphObj.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.45f, 2.275f);
             graphObj.GetComponent<RectTransform>().sizeDelta = new Vector2(1.0f, 0.45f);
             graphObj.transform.Rotate(22.5f, 0, 0, Space.World);
-            graphObj.transform.SetParent(panel.transform);
+            graphObj.transform.SetParent(graphMask.transform);
             graphObj.transform.name = "GraphContainer";
 
             float width = 0;
@@ -111,12 +119,12 @@ namespace PerformanceMeter {
 
             if (width > 0) {
                 if (PluginConfig.Instance.GetMode(false) != PluginConfig.MeasurementMode.None) {
-                    WindowGraph graph = panel.AddComponent<WindowGraph>();
+                    WindowGraph graph = graphMask.AddComponent<WindowGraph>();
                     PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(false);
                     graph.ShowGraph(energyList, false, width, side == PluginConfig.MeasurementSide.Left ? Color.red : (side == PluginConfig.MeasurementSide.Right ? Color.blue : Color.white /* null */));
                 }
                 if (PluginConfig.Instance.GetMode(true) != PluginConfig.MeasurementMode.None) {
-                    WindowGraph graph = panel.AddComponent<WindowGraph>();
+                    WindowGraph graph = graphMask.AddComponent<WindowGraph>();
                     PluginConfig.MeasurementSide side = PluginConfig.Instance.GetSide(true);
                     graph.ShowGraph(secondaryEnergyList, true, width, side == PluginConfig.MeasurementSide.Left ? Color.red : (side == PluginConfig.MeasurementSide.Right ? Color.blue : Color.white /* null */));
                 }
@@ -145,10 +153,10 @@ namespace PerformanceMeter {
                 }
             } else Logger.log.Warn("Both modes are set to None - the graph will be empty!");
 
-            StartCoroutine(WaitForMenu());
+            StartCoroutine(WaitForMenu(graphObj, graphMask));
         }
 
-        IEnumerator WaitForMenu() {
+        IEnumerator WaitForMenu(GameObject graphObj, GameObject graphMask) {
             bool loaded = false;
             if (endActions is StandardLevelGameplayManager) {
                 ResultsViewController resultsController = null;
@@ -174,6 +182,25 @@ namespace PerformanceMeter {
                 resultsController.retryButtonPressedEvent += DismissGraph_Mission;  
             }
             Logger.log.Debug("PerformanceMeter menu created successfully");
+            StartCoroutine(GraphAnimation(graphObj, graphMask));
+        }
+
+        IEnumerator GraphAnimation(GameObject graphObj, GameObject graphMask) {
+            const float fps = 90f;
+            if (PluginConfig.Instance.animationDuration <= 0f) yield break;
+            float steps = fps * PluginConfig.Instance.animationDuration;
+            Vector3 posDelta = new Vector3(0.5f / steps, 0f, 0f);
+            Vector2 sizeDelta = new Vector2(1f / steps, 0f);
+            graphMask.GetComponent<RectTransform>().sizeDelta = new Vector2(0.0f, 0.45f);
+            graphMask.GetComponent<RectTransform>().localPosition -= posDelta * steps;
+            graphObj.GetComponent<RectTransform>().localPosition += posDelta * steps;
+            for (int s = 1; s <= steps; s++) {
+                if (panel == null) yield break;
+                graphMask.GetComponent<RectTransform>().sizeDelta += sizeDelta;
+                graphMask.GetComponent<RectTransform>().localPosition += posDelta;
+                graphObj.GetComponent<RectTransform>().localPosition -= posDelta;
+                yield return new WaitForSeconds(1f / fps);
+            }
         }
 
         void DismissGraph(ResultsViewController vc) {

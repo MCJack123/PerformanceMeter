@@ -21,8 +21,14 @@ namespace PerformanceMeter {
         public virtual int secondaryMode { get; set; } = (int)MeasurementMode.None;
         public virtual int secondarySide { get; set; } = (int)MeasurementSide.Both;
         public virtual bool showMisses { get; set; } = false;
+        public virtual float animationDuration { get; set; } = 3.0f;
+        public virtual int color { get; set; } = 0xFF0000;
+        public virtual int secondaryColor { get; set; } = 0x0000FF;
+        public virtual bool overrideColor { get; set; } = false;
+        public virtual bool overrideSecondaryColor { get; set; } = false;
         internal MeasurementMode GetMode(bool sec) { return (MeasurementMode)(sec ? secondaryMode : mode); }
         internal MeasurementSide GetSide(bool sec) { return (MeasurementSide)(sec ? secondarySide : side); }
+        internal UnityEngine.Color GetColor(bool sec) { int c = sec ? secondaryColor : color; return new UnityEngine.Color((float)((c >> 16) & 0xFF) / 255f, (float)((c >> 8) & 0xFF) / 255f, (float)(c & 0xFF) / 255f); }
 
         public enum MeasurementMode {
             Energy,

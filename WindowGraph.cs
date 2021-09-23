@@ -21,10 +21,10 @@ namespace PerformanceMeter {
         public RectTransform    GraphContainer { get; private set; }
         public List<GameObject> DotObjects     { get; private set; }
         public List<GameObject> LinkObjects    { get; private set; }
-        public List<GameObject> LabelXObjects  { get; private set; }
+        /*public List<GameObject> LabelXObjects  { get; private set; }
         public List<GameObject> LabelYObjects  { get; private set; }
         public List<GameObject> DashXObjects   { get; private set; }
-        public List<GameObject> DashYObjects   { get; private set; }
+        public List<GameObject> DashYObjects   { get; private set; }*/
 
         private void Awake()
         {
@@ -33,10 +33,10 @@ namespace PerformanceMeter {
 
             DotObjects = new List<GameObject>();
             LinkObjects = new List<GameObject>();
-            LabelXObjects = new List<GameObject>();
-            LabelYObjects = new List<GameObject>();
-            DashXObjects = new List<GameObject>();
-            DashYObjects = new List<GameObject>();
+            //LabelXObjects = new List<GameObject>();
+            //LabelYObjects = new List<GameObject>();
+            //DashXObjects = new List<GameObject>();
+            //DashYObjects = new List<GameObject>();
         }
 
         public void ShowGraph(List<Pair<float, float>> valueList, bool isSecondary, float xMaximum, Color overrideColor)
@@ -53,7 +53,7 @@ namespace PerformanceMeter {
                     Destroy(go);
                 LinkObjects.Clear();
             }
-            if (LabelXObjects != null)
+            /*if (LabelXObjects != null)
             {
                 foreach (var go in LabelXObjects)
                     Destroy(go);
@@ -76,7 +76,7 @@ namespace PerformanceMeter {
                 foreach (var go in DashYObjects)
                     Destroy(go);
                 DashYObjects.Clear();
-            }
+            }*/
 
             var graphWidth = GraphContainer.sizeDelta.x;
             var graphHeight = GraphContainer.sizeDelta.y;
@@ -126,7 +126,8 @@ namespace PerformanceMeter {
             var gameObject = new GameObject("DotConnection", typeof(Image));
             gameObject.transform.SetParent(GraphContainer, false);
             var image = gameObject.GetComponent<Image>();
-            if (overrideColor != Color.white /* null */) image.color = overrideColor;
+            if (isSecondary ? PluginConfig.Instance.overrideSecondaryColor : PluginConfig.Instance.overrideColor) image.color = PluginConfig.Instance.GetColor(isSecondary);
+            else if (overrideColor != Color.white /* null */) image.color = overrideColor;
             else {
                 switch (PluginConfig.Instance.GetMode(isSecondary)) {
                     case PluginConfig.MeasurementMode.Energy:

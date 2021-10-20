@@ -35,6 +35,7 @@ namespace PerformanceMeter {
         ScoreController scoreController;
         GameEnergyCounter energyCounter;
         RelativeScoreAndImmediateRankCounter rankCounter;
+        AudioTimeSyncController audioController;
         GameObject panel;
         ILevelEndActions endActions;
         bool levelOk = false;
@@ -210,6 +211,7 @@ namespace PerformanceMeter {
                 scoreController = null;
                 energyCounter = null;
                 rankCounter = null;
+                audioController = null;
                 endActions = null;
                 averageHitValue = 0.0f;
                 averageHitValueSize = 0;
@@ -244,12 +246,14 @@ namespace PerformanceMeter {
             scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().LastOrDefault();
             energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().LastOrDefault();
             rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().LastOrDefault();
+            audioController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().LastOrDefault();
             endActions = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().LastOrDefault();
             if (endActions == null) endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().LastOrDefault();
 
-            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) {
+            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null && audioController != null) {
                 scoreController.noteWasCutEvent += NoteHit;
                 scoreController.noteWasMissedEvent += NoteMiss;
+                scoreController.comboBreakingEventHappenedEvent += ComboBreak;
                 endActions.levelFinishedEvent += LevelFinished;
                 endActions.levelFailedEvent += LevelFinished;
                 Logger.log.Debug("PerformanceMeter reloaded successfully");
@@ -258,6 +262,7 @@ namespace PerformanceMeter {
                 scoreController = null;
                 energyCounter = null;
                 rankCounter = null;
+                audioController = null;
                 endActions = null;
                 averageHitValue = 0.0f;
                 averageHitValueSize = 0;
@@ -276,7 +281,6 @@ namespace PerformanceMeter {
         }
 
         private void RecordHitValue(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
-            if (score == null) misses.Add(data.time);
             float newEnergy;
             switch (PluginConfig.Instance.GetMode(false)) {
                 case PluginConfig.MeasurementMode.None: return;
@@ -298,7 +302,6 @@ namespace PerformanceMeter {
         }
 
         private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
-            if (score == null) misses.Add(data.time);
             float newEnergy;
             switch (PluginConfig.Instance.GetMode(true)) {
                 case PluginConfig.MeasurementMode.None: return;
@@ -346,11 +349,16 @@ namespace PerformanceMeter {
             RecordHitValue(null, data, null);
         }
 
+        private void ComboBreak() {
+            misses.Add(audioController.songTime);
+        }
+
         private void LevelFinished() {
             if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) {
                 levelOk = true;
                 scoreController.noteWasCutEvent -= NoteHit;
                 scoreController.noteWasMissedEvent -= NoteMiss;
+                scoreController.comboBreakingEventHappenedEvent -= ComboBreak;
                 endActions.levelFinishedEvent -= LevelFinished;
                 endActions.levelFailedEvent -= LevelFinished;
             }

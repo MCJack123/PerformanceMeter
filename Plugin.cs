@@ -52,11 +52,13 @@ namespace PerformanceMeter {
         }
 
         void GameSceneActive() {
-            if (PluginConfig.Instance.enabled) PerformanceMeterController.instance.GetControllers();
+            if (PluginConfig.Instance.enabled)
+                PerformanceMeterController.instance.GetControllers();
         }
 
         void ActiveSceneChanged(Scene oldScene, Scene newScene) {
-            if (PluginConfig.Instance.enabled && newScene.name == "MainMenu") PerformanceMeterController.instance.ShowResults();
+            if (PluginConfig.Instance.enabled && newScene.name == "MainMenu")
+                PerformanceMeterController.instance.ShowResults();
         }
     }
 

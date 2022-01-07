@@ -28,7 +28,21 @@ namespace PerformanceMeter {
         public virtual bool overrideSecondaryColor { get; set; } = false;
         internal MeasurementMode GetMode(bool sec) { return (MeasurementMode)(sec ? secondaryMode : mode); }
         internal MeasurementSide GetSide(bool sec) { return (MeasurementSide)(sec ? secondarySide : side); }
-        internal UnityEngine.Color GetColor(bool sec) { int c = sec ? secondaryColor : color; return new UnityEngine.Color((float)((c >> 16) & 0xFF) / 255f, (float)((c >> 8) & 0xFF) / 255f, (float)(c & 0xFF) / 255f); }
+        internal UnityEngine.Color GetSideColor(bool sec) {
+            switch (GetSide(sec)) {
+                case MeasurementSide.Left:
+                    return UnityEngine.Color.red;
+                case MeasurementSide.Right:
+                    return UnityEngine.Color.blue;
+                case MeasurementSide.Both:
+                    return UnityEngine.Color.white;
+                default:
+                    return UnityEngine.Color.white;
+            };
+        }
+        internal UnityEngine.Color GetColor(bool sec) {
+            int c = sec ? secondaryColor : color;
+            return new UnityEngine.Color((float)((c >> 16) & 0xFF) / 255f, (float)((c >> 8) & 0xFF) / 255f, (float)(c & 0xFF) / 255f); }
 
         public enum MeasurementMode {
             Energy,

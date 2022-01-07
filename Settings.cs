@@ -86,7 +86,8 @@ namespace PerformanceMeter {
                     PluginConfig.Instance.secondarySide = i;
                     ok++;
                 }
-                if (ok >= 2) break;
+                if (ok >= 2)
+                    break;
             }
             PluginConfig.Instance.Changed();
         }

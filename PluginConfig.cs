@@ -10,39 +10,37 @@
 
 using System.Runtime.CompilerServices;
 using IPA.Config.Stores;
+using UnityEngine;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
 namespace PerformanceMeter {
     public class PluginConfig {
         public static PluginConfig Instance { get; set; }
         public virtual bool enabled { get; set; } = true;
-        public virtual int mode { get; set; } = (int)MeasurementMode.Energy;
-        public virtual int side { get; set; } = (int)MeasurementSide.Both;
-        public virtual int secondaryMode { get; set; } = (int)MeasurementMode.None;
-        public virtual int secondarySide { get; set; } = (int)MeasurementSide.Both;
+        public virtual MeasurementMode mode { get; set; } = MeasurementMode.Energy;
+        public virtual MeasurementSide side { get; set; } = MeasurementSide.Both;
+        public virtual Color sideColor { get; set; } = Color.white;
+        public virtual MeasurementMode secondaryMode { get; set; } = MeasurementMode.None;
+        public virtual MeasurementSide secondarySide { get; set; } = MeasurementSide.Both;
+        public virtual Color secondarySideColor { get; set; } = Color.white;
         public virtual bool showMisses { get; set; } = false;
         public virtual float animationDuration { get; set; } = 3.0f;
-        public virtual int color { get; set; } = 0xFF0000;
-        public virtual int secondaryColor { get; set; } = 0x0000FF;
+        public virtual Color color { get; set; } = new Color(1f, 0f, 0f);
+        public virtual Color secondaryColor { get; set; } = new Color(0f, 0f, 1f);
         public virtual bool overrideColor { get; set; } = false;
         public virtual bool overrideSecondaryColor { get; set; } = false;
-        internal MeasurementMode GetMode(bool sec) { return (MeasurementMode)(sec ? secondaryMode : mode); }
-        internal MeasurementSide GetSide(bool sec) { return (MeasurementSide)(sec ? secondarySide : side); }
-        internal UnityEngine.Color GetSideColor(bool sec) {
-            switch (GetSide(sec)) {
+        internal Color GetSideColor(MeasurementSide side) {
+            switch (side) {
                 case MeasurementSide.Left:
-                    return UnityEngine.Color.red;
+                    return Color.red;
                 case MeasurementSide.Right:
-                    return UnityEngine.Color.blue;
+                    return Color.blue;
                 case MeasurementSide.Both:
-                    return UnityEngine.Color.white;
+                    return Color.white;
                 default:
-                    return UnityEngine.Color.white;
+                    return Color.white;
             };
         }
-        internal UnityEngine.Color GetColor(bool sec) {
-            int c = sec ? secondaryColor : color;
-            return new UnityEngine.Color((float)((c >> 16) & 0xFF) / 255f, (float)((c >> 8) & 0xFF) / 255f, (float)(c & 0xFF) / 255f); }
 
         public enum MeasurementMode {
             Energy,

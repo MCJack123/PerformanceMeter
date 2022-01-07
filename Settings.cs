@@ -50,10 +50,10 @@ namespace PerformanceMeter {
         public bool overrideSecondaryColor = PluginConfig.Instance.overrideSecondaryColor;
 
         [UIValue("color")]
-        public UnityEngine.Color color = PluginConfig.Instance.GetColor(false);
+        public UnityEngine.Color color = PluginConfig.Instance.color;
 
         [UIValue("secondaryColor")]
-        public UnityEngine.Color secondaryColor = PluginConfig.Instance.GetColor(true);
+        public UnityEngine.Color secondaryColor = PluginConfig.Instance.secondaryColor;
 
         [UIAction("#apply")]
         public void OnApply() {
@@ -62,41 +62,22 @@ namespace PerformanceMeter {
             PluginConfig.Instance.animationDuration = animationDuration;
             PluginConfig.Instance.overrideColor = overrideColor;
             PluginConfig.Instance.overrideSecondaryColor = overrideSecondaryColor;
-            PluginConfig.Instance.color = ((int)(color.r * 255) << 16) | ((int)(color.g * 255) << 8) | (int)(color.b * 255);
-            PluginConfig.Instance.secondaryColor = ((int)(secondaryColor.r * 255) << 16) | ((int)(secondaryColor.g * 255) << 8) | (int)(secondaryColor.b * 255);
-            int ok = 0;
-            for (int i = 0; i < modeOptions.Count; i++) {
-                if (modeOptions[i] as string == listChoice) {
-                    PluginConfig.Instance.mode = i >= (int)PluginConfig.MeasurementMode.None ? i + 1 : i;
-                    break;
-                }
-            }
-            for (int i = 0; i < secondaryModeOptions.Count; i++) {
-                if (secondaryModeOptions[i] as string == secondaryListChoice) {
-                    PluginConfig.Instance.secondaryMode = i;
-                    break;
-                }
-            }
-            for (int i = 0; i < sideOptions.Count; i++) {
-                if (sideOptions[i] as string == sideChoice) {
-                    PluginConfig.Instance.side = i;
-                    ok++;
-                }
-                if (sideOptions[i] as string == secondarySideChoice) {
-                    PluginConfig.Instance.secondarySide = i;
-                    ok++;
-                }
-                if (ok >= 2)
-                    break;
-            }
+            PluginConfig.Instance.color = color;
+            PluginConfig.Instance.secondaryColor = secondaryColor;
+            PluginConfig.Instance.mode = (PluginConfig.MeasurementMode)modeOptions.FindIndex(a => a.ToString() == listChoice);
+            PluginConfig.Instance.secondaryMode = (PluginConfig.MeasurementMode)secondaryModeOptions.FindIndex(a => a.ToString() == secondaryListChoice);
+            PluginConfig.Instance.side = (PluginConfig.MeasurementSide)sideOptions.FindIndex(a => a.ToString() == sideChoice);
+            PluginConfig.Instance.secondarySide = (PluginConfig.MeasurementSide)sideOptions.FindIndex(a => a.ToString() == secondarySideChoice);
+            PluginConfig.Instance.sideColor = PluginConfig.Instance.GetSideColor(PluginConfig.Instance.side);
+            PluginConfig.Instance.secondarySideColor = PluginConfig.Instance.GetSideColor(PluginConfig.Instance.secondarySide);
             PluginConfig.Instance.Changed();
         }
 
         Settings() {
-            listChoice = modeOptions[PluginConfig.Instance.mode] as string;
-            sideChoice = sideOptions[PluginConfig.Instance.side] as string;
-            secondaryListChoice = secondaryModeOptions[PluginConfig.Instance.secondaryMode] as string;
-            secondarySideChoice = sideOptions[PluginConfig.Instance.secondarySide] as string;
+            listChoice = modeOptions[(int)PluginConfig.Instance.mode] as string;
+            sideChoice = sideOptions[(int)PluginConfig.Instance.side] as string;
+            secondaryListChoice = secondaryModeOptions[(int)PluginConfig.Instance.secondaryMode] as string;
+            secondarySideChoice = sideOptions[(int)PluginConfig.Instance.secondarySide] as string;
         }
     }
 }

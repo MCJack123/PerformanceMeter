@@ -30,7 +30,7 @@ namespace PerformanceMeter {
             LinkObjects = new List<GameObject>();
         }
 
-        public void ShowGraph(List<Pair<float, float>> valueList, bool isSecondary, float xMaximum, Color overrideColor) {
+        public void ShowGraph(List<Pair<float, float>> valueList, PluginConfig.MeasurementMode mode, float xMaximum, UnityEngine.Color color, Color overrideColor) {
             if (DotObjects != null) {
                 foreach (var go in DotObjects)
                     Destroy(go);
@@ -60,7 +60,7 @@ namespace PerformanceMeter {
                 if (lastCircleGameObject != null) {
                     var dotConnectionGameObject = CreateDotConnection(lastCircleGameObject.GetComponent<RectTransform>().anchoredPosition,
                                                                       circleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      true, graphHeight, isSecondary, overrideColor);
+                                                                      true, graphHeight, mode, color, overrideColor);
                     LinkObjects.Add(dotConnectionGameObject);
                 }
                 lastCircleGameObject = circleGameObject;
@@ -82,19 +82,19 @@ namespace PerformanceMeter {
             return gameObject;
         }
 
-        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight, bool isSecondary, Color overrideColor) {
+        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight, PluginConfig.MeasurementMode mode, UnityEngine.Color color, Color overrideColor) {
             var gameObject = new GameObject("DotConnection", typeof(Image));
             gameObject.transform.SetParent(GraphContainer, false);
             var image = gameObject.GetComponent<Image>();
-            if (isSecondary ? PluginConfig.Instance.overrideSecondaryColor : PluginConfig.Instance.overrideColor) {
-                image.color = PluginConfig.Instance.GetColor(isSecondary);
+            if (color != Color.clear) {
+                image.color = color;
             } else if (overrideColor != Color.white /* null */) {
                 image.color = overrideColor;
             } else {
                 float dotPositionRange = dotPositionB.y / graphHeight;
-                switch (PluginConfig.Instance.GetMode(isSecondary)) {
+                switch (mode) {
                     case PluginConfig.MeasurementMode.Energy:
-                        if (dotPositionRange > 1.0) image.color = Color.white;
+                        if (dotPositionRange >= 1.0) image.color = Color.white;
                         else if (dotPositionRange >= 0.5) image.color = Color.green;
                         else if (dotPositionRange >= 0.25) image.color = Color.yellow;
                         else if (dotPositionRange >= 0) image.color = Color.red;

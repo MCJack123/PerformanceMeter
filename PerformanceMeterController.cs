@@ -127,15 +127,15 @@ namespace PerformanceMeter {
                 Logger.log.Warn("Both modes are set to None - the graph will be empty!");
 
             if (width > 0) {
-                Color color;
+                Color overrideColor;
                 if (hasPrimary) {
-                    color = PluginConfig.Instance.overrideColor ? PluginConfig.Instance.color : Color.clear;
-                    graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, color, PluginConfig.Instance.sideColor);
+                    overrideColor = PluginConfig.Instance.overrideColor ? PluginConfig.Instance.color : Color.clear;
+                    graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, overrideColor, PluginConfig.Instance.sideColor);
                 }
 
                 if (hasSecondary) {
-                    color = PluginConfig.Instance.overrideSecondaryColor ? PluginConfig.Instance.secondaryColor : Color.clear;
-                    graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, color, PluginConfig.Instance.secondarySideColor);
+                    overrideColor = PluginConfig.Instance.overrideSecondaryColor ? PluginConfig.Instance.secondaryColor : Color.clear;
+                    graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, overrideColor, PluginConfig.Instance.secondarySideColor);
                 }
 
                 if (PluginConfig.Instance.showMisses) {
@@ -290,7 +290,7 @@ namespace PerformanceMeter {
 
         private void RecordHitValue(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
             float newEnergy = 0;
-            switch ((PluginConfig.MeasurementMode)PluginConfig.Instance.mode) {
+            switch (PluginConfig.Instance.mode) {
                 case PluginConfig.MeasurementMode.None:
                     return;
                 case PluginConfig.MeasurementMode.Energy:
@@ -329,7 +329,7 @@ namespace PerformanceMeter {
 
         private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
             float newEnergy = 0;
-            switch ((PluginConfig.MeasurementMode)PluginConfig.Instance.secondaryMode) {
+            switch (PluginConfig.Instance.secondaryMode) {
                 case PluginConfig.MeasurementMode.None:
                     return;
                 case PluginConfig.MeasurementMode.Energy:
@@ -351,10 +351,11 @@ namespace PerformanceMeter {
                     if (score == null)
                         return;
                     
-                    newEnergy = ((newEnergy * secondaryAverageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++secondaryAverageHitValueSize; ;
+                    newEnergy = ((newEnergy * secondaryAverageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++secondaryAverageHitValueSize;
                     break;
                 default:
-                    Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes."); return;
+                    Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes.");
+                    return;
             }
 
             if (secondaryEnergyList.Count == 0)
@@ -392,6 +393,7 @@ namespace PerformanceMeter {
 
         private void NoteMiss(NoteData data, int score) {
             RecordHitValue(null, data, null);
+            RecordHitValueSecondary(null, data, null);
         }
 
         private void ComboBreak() {

@@ -30,7 +30,7 @@ namespace PerformanceMeter {
             LinkObjects = new List<GameObject>();
         }
 
-        public void ShowGraph(List<Pair<float, float>> valueList, PluginConfig.MeasurementMode mode, float xMaximum, UnityEngine.Color color, Color overrideColor) {
+        public void ShowGraph(List<Pair<float, float>> valueList, PluginConfig.MeasurementMode mode, float xMaximum, UnityEngine.Color overrideColor, Color sideColor) {
             if (DotObjects != null) {
                 foreach (var go in DotObjects)
                     Destroy(go);
@@ -60,7 +60,7 @@ namespace PerformanceMeter {
                 if (lastCircleGameObject != null) {
                     var dotConnectionGameObject = CreateDotConnection(lastCircleGameObject.GetComponent<RectTransform>().anchoredPosition,
                                                                       circleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      true, graphHeight, mode, color, overrideColor);
+                                                                      true, graphHeight, mode, overrideColor, sideColor);
                     LinkObjects.Add(dotConnectionGameObject);
                 }
                 lastCircleGameObject = circleGameObject;
@@ -82,14 +82,14 @@ namespace PerformanceMeter {
             return gameObject;
         }
 
-        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight, PluginConfig.MeasurementMode mode, UnityEngine.Color color, Color overrideColor) {
+        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight, PluginConfig.MeasurementMode mode, Color overrideColor, Color sideColor) {
             var gameObject = new GameObject("DotConnection", typeof(Image));
             gameObject.transform.SetParent(GraphContainer, false);
             var image = gameObject.GetComponent<Image>();
-            if (color != Color.clear) {
-                image.color = color;
-            } else if (overrideColor != Color.white /* null */) {
+            if (overrideColor != Color.clear) {
                 image.color = overrideColor;
+            } else if (sideColor != Color.white) {
+                image.color = sideColor;
             } else {
                 float dotPositionRange = dotPositionB.y / graphHeight;
                 switch (mode) {

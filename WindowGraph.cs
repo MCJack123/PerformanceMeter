@@ -16,8 +16,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace PerformanceMeter {
-    public class WindowGraph : MonoBehaviour
-    {
+    public class WindowGraph : MonoBehaviour {
         public RectTransform    GraphContainer { get; private set; }
         public List<GameObject> DotObjects     { get; private set; }
         public List<GameObject> LinkObjects    { get; private set; }
@@ -112,10 +111,10 @@ namespace PerformanceMeter {
                     case PluginConfig.MeasurementMode.CutValue:
                     case PluginConfig.MeasurementMode.AvgCutValue:
                         if (dotPositionRange >= 1.0) image.color = Color.white;
-                        else if (dotPositionRange >= 101.0 / 115.0) image.color = Color.green;
-                        else if (dotPositionRange >= 90.0 / 115.0) image.color = Color.yellow;
-                        else if (dotPositionRange >= 80.0 / 115.0) image.color = new Color(1.0f, 0.6f, 0.0f);
-                        else if (dotPositionRange >= 60.0 / 115.0) image.color = Color.red;
+                        else if (dotPositionRange >= 0.87) image.color = Color.green;                 // ~ 101.0/115.0
+                        else if (dotPositionRange >= 0.78) image.color = Color.yellow;                // ~  90.0/115.0
+                        else if (dotPositionRange >= 0.69) image.color = new Color(1.0f, 0.6f, 0.0f); // ~  80.0/115.0
+                        else if (dotPositionRange >= 0.52) image.color = Color.red;                   // ~  60.0/115.0
                         else if (dotPositionRange >= 0.0) image.color = new Color(0.5f, 0.0f, 0.0f);
                         else image.color = Color.cyan;
                         break;

@@ -30,7 +30,9 @@ namespace PerformanceMeter {
         List<Pair<float, float>> energyList = new List<Pair<float, float>>();
         List<Pair<float, float>> secondaryEnergyList = new List<Pair<float, float>>();
         List<float> misses = new List<float>();
+        float averageHitValue = 0.0f;
         int averageHitValueSize = 0;
+        float secondaryAverageHitValue = 0.0f;
         int secondaryAverageHitValueSize = 0;
         ScoreController scoreController;
         GameEnergyCounter energyCounter;
@@ -41,7 +43,8 @@ namespace PerformanceMeter {
         bool levelOk = false;
 
         public void ShowResults() {
-            if (!levelOk) return;
+            if (!levelOk)
+                return;
             levelOk = false;
             Logger.log.Debug("Found " + energyList.Count() + " primary notes, " + secondaryEnergyList.Count() + " secondary notes");
 
@@ -220,6 +223,7 @@ namespace PerformanceMeter {
                 rankCounter = null;
                 audioController = null;
                 endActions = null;
+                averageHitValue = 0.0f;
                 averageHitValueSize = 0;
             }
             if (vc != null) {
@@ -239,7 +243,9 @@ namespace PerformanceMeter {
         public void GetControllers() {
             DismissGraph(null);
             levelOk = false;
+            averageHitValue = 0.0f;
             averageHitValueSize = 0;
+            secondaryAverageHitValue = 0.0f;
             secondaryAverageHitValueSize = 0;
             energyList.Clear();
             secondaryEnergyList.Clear();
@@ -271,7 +277,10 @@ namespace PerformanceMeter {
                 rankCounter = null;
                 audioController = null;
                 endActions = null;
+                averageHitValue = 0.0f;
                 averageHitValueSize = 0;
+                secondaryAverageHitValue = 0.0f;
+                secondaryAverageHitValueSize = 0;
             }
         }
 
@@ -312,7 +321,8 @@ namespace PerformanceMeter {
                     if (score == null)
                         return;
 
-                    newEnergy = ((newEnergy * averageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++averageHitValueSize;
+                    averageHitValue = ((averageHitValue * averageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++averageHitValueSize;
+                    newEnergy = averageHitValue;
                     break;
                 default:
                     Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes.");
@@ -350,8 +360,9 @@ namespace PerformanceMeter {
                 case PluginConfig.MeasurementMode.AvgCutValue:
                     if (score == null)
                         return;
-                    
-                    newEnergy = ((newEnergy * secondaryAverageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++secondaryAverageHitValueSize;
+
+                    secondaryAverageHitValue = ((secondaryAverageHitValue * secondaryAverageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++secondaryAverageHitValueSize;
+                    newEnergy = secondaryAverageHitValue;
                     break;
                 default:
                     Logger.log.Error("An invalid mode was specified! PerformanceMeter will not record scores, resulting in a blank graph. Check the readme for the valid modes.");

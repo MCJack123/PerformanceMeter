@@ -80,20 +80,6 @@ namespace PerformanceMeter {
             text.GetComponent<RectTransform>().localPosition = new Vector3(-0.3f, -0.25f, 0.1f);
             text.GetComponent<RectTransform>().sizeDelta = new Vector2(75.0f, 25.0f);
 
-            GameObject textObj2 = new GameObject("Label");
-            textObj2.transform.SetParent(canvas.transform);
-            textObj2.transform.Rotate(22.5f, 0, 0, Space.World);
-            HMUI.CurvedTextMeshPro text2 = textObj2.AddComponent<HMUI.CurvedTextMeshPro>();
-            text2.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF"));
-            text2.fontSize = 9.0f;
-            text2.alignment = TextAlignmentOptions.Right;
-            text2.text = "By JackMacWindows#9776";
-            text2.color = new Color(0.3f, 0.3f, 0.3f);
-            text2.enableAutoSizing = true;
-            text2.transform.localScale = new Vector3(0.002f, 0.002f, 0.002f);
-            text2.GetComponent<RectTransform>().localPosition = new Vector3(0.31f, -0.2625f, 0.1f);
-            text2.GetComponent<RectTransform>().sizeDelta = new Vector2(175.0f, 16.0f);
-
             GameObject graphMask = new GameObject("GraphMask");
             graphMask.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.45f, 2.275f);
             graphMask.GetComponent<RectTransform>().sizeDelta = new Vector2(1.0f, 0.45f);
@@ -130,15 +116,12 @@ namespace PerformanceMeter {
                 Logger.log.Warn("Both modes are set to None - the graph will be empty!");
 
             if (width > 0) {
-                Color overrideColor;
                 if (hasPrimary) {
-                    overrideColor = PluginConfig.Instance.overrideColor ? PluginConfig.Instance.color : Color.clear;
-                    graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, overrideColor, PluginConfig.Instance.sideColor);
+                    graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, PluginConfig.Instance.overrideColor, PluginConfig.Instance.sideColor, true);
                 }
 
                 if (hasSecondary) {
-                    overrideColor = PluginConfig.Instance.overrideSecondaryColor ? PluginConfig.Instance.secondaryColor : Color.clear;
-                    graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, overrideColor, PluginConfig.Instance.secondarySideColor);
+                    graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, PluginConfig.Instance.overrideSecondaryColor, PluginConfig.Instance.secondarySideColor, false);
                 }
 
                 if (PluginConfig.Instance.showMisses) {

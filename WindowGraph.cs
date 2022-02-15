@@ -93,8 +93,7 @@ namespace PerformanceMeter {
                 float dotPositionRange = dotPositionB.y / graphHeight;
                 switch (mode) {
                     case PluginConfig.MeasurementMode.Energy:
-                        if (dotPositionRange == 1.0) image.color = Color.white;
-                        else if (dotPositionRange >= 0.5) image.color = Color.green;
+                        if (dotPositionRange >= 0.5) image.color = Color.green;
                         else if (dotPositionRange >= 0.25) image.color = Color.yellow;
                         else image.color = Color.red;
                         break;
@@ -109,7 +108,7 @@ namespace PerformanceMeter {
                         break;
                     case PluginConfig.MeasurementMode.CutValue:
                     case PluginConfig.MeasurementMode.AvgCutValue:
-                        if (dotPositionRange == 1.0) image.color = Color.white;
+                        if (dotPositionRange == 1.0) image.color = Color.white;                       //   115.0/115.0
                         else if (dotPositionRange >= 0.87) image.color = Color.green;                 // ~ 101.0/115.0
                         else if (dotPositionRange >= 0.78) image.color = Color.yellow;                // ~  90.0/115.0
                         else if (dotPositionRange >= 0.69) image.color = new Color(1.0f, 0.6f, 0.0f); // ~  80.0/115.0

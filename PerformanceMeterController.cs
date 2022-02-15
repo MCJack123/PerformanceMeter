@@ -153,20 +153,20 @@ namespace PerformanceMeter {
         IEnumerator WaitForMenu(GameObject graphObj, GameObject graphMask) {
             if (endActions is StandardLevelGameplayManager) {
                 ResultsViewController resultsController = null;
-                while (resultsController == null) {
+                do {
                     resultsController = Resources.FindObjectsOfTypeAll<ResultsViewController>().LastOrDefault();
                     yield return new WaitForSeconds(0.1f);
-                }
+                } while (resultsController == null);
 
-                yield return new WaitForSeconds(0.1f);
+                    yield return new WaitForSeconds(0.1f);
                 resultsController.continueButtonPressedEvent += DismissGraph;
                 resultsController.restartButtonPressedEvent += DismissGraph;
             } else {
                 MissionResultsViewController resultsController = null;
-                while (resultsController == null) {
+                do {
                     resultsController = Resources.FindObjectsOfTypeAll<MissionResultsViewController>().LastOrDefault();
                     yield return new WaitForSeconds(0.1f);
-                }
+                } while (resultsController == null);
 
                 yield return new WaitForSeconds(0.1f);
                 resultsController.continueButtonPressedEvent += DismissGraph_Mission;

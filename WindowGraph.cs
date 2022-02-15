@@ -18,7 +18,6 @@ using UnityEngine.UI;
 namespace PerformanceMeter {
     public class WindowGraph : MonoBehaviour {
         public RectTransform    GraphContainer { get; private set; }
-        public List<GameObject> DotObjects     { get; private set; }
         public List<GameObject> LinkObjects    { get; private set; }
 
         public delegate Color ColorMode_Selection(float dotPositionRage);
@@ -26,56 +25,35 @@ namespace PerformanceMeter {
 
         private void Awake() {
             GraphContainer = transform.Find("GraphContainer").GetComponent<RectTransform>();
-            if (GraphContainer == null) Logger.log.Error("Could not find GraphContainer");
+            if (GraphContainer == null)
+                Logger.log.Error("Could not find GraphContainer");
 
-            DotObjects = new List<GameObject>();
             LinkObjects = new List<GameObject>();
         }
 
         public void ShowGraph(List<Pair<float, float>> valueList, PluginConfig.MeasurementMode mode, float xMaximum, bool colorOverride, Color sideColor, bool isPrimaryMode) {
-            if (valueList.Count == 0)
-                return;
-
             var graphWidth = GraphContainer.sizeDelta.x;
             var graphHeight = GraphContainer.sizeDelta.y;
             var xStep = graphWidth / xMaximum;
 
             setColorMode(mode, isPrimaryMode, colorOverride, sideColor);
 
-            // Unroll the loop once to prevent the 'if' check for all subsequent iterations
             var xPosition = valueList[0].first * xStep;
             var yPosition = valueList[0].second * graphHeight;
-            GameObject circleGameObject = CreateCircle(new Vector2(xPosition, yPosition), false);
-            GameObject lastCircleGameObject = null;
+            var newPosition = new Vector2(xPosition, yPosition);
+            var lastPosition = newPosition;
             GameObject dotConnectionGameObject = null;
             for (var i = 1; i < valueList.Count; i++) {
-                lastCircleGameObject = circleGameObject;
-
                 xPosition = valueList[i].first * xStep;
                 yPosition = valueList[i].second * graphHeight;
-                circleGameObject = CreateCircle(new Vector2(xPosition, yPosition), false);
-                DotObjects.Add(circleGameObject);
-                dotConnectionGameObject = CreateDotConnection(lastCircleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      circleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      true, graphHeight);
+                newPosition = new Vector2(xPosition, yPosition);
+                dotConnectionGameObject = CreateDotConnection(lastPosition, newPosition, graphHeight);
                 LinkObjects.Add(dotConnectionGameObject);
+                lastPosition = newPosition;
             }
         }
 
-        private GameObject CreateCircle(Vector2 anchoredPosition, bool makeDotsVisible) {
-            var gameObject = new GameObject("Circle", typeof(Image));
-            gameObject.transform.SetParent(GraphContainer, false);
-            var image = gameObject.GetComponent<Image>();
-            image.enabled = makeDotsVisible;
-            var rectTransform = gameObject.GetComponent<RectTransform>();
-            rectTransform.anchoredPosition = anchoredPosition;
-            rectTransform.sizeDelta = new Vector2(0.02f, 0.02f);
-            rectTransform.anchorMin = new Vector2(0, 0);
-            rectTransform.anchorMax = new Vector2(0, 0);
-            return gameObject;
-        }
-
-        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight) {
+        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, float graphHeight) {
             float dotPositionRange = dotPositionB.y / graphHeight;
             var gameObject = new GameObject("DotConnection", typeof(Image));
             
@@ -83,7 +61,7 @@ namespace PerformanceMeter {
             var image = gameObject.GetComponent<Image>();
 
             image.color = dotColor(dotPositionRange);
-            image.enabled = makeLinkVisible;
+            image.enabled = true;
             var rectTransform = gameObject.GetComponent<RectTransform>();
             var dir = (dotPositionB - dotPositionA).normalized;
             var distance = Vector2.Distance(dotPositionA, dotPositionB);
@@ -139,7 +117,8 @@ namespace PerformanceMeter {
         }
 
         private Color ColorMode_Energy(float dotPositionRange) {
-            if (dotPositionRange >= 0.5) return Color.green;
+            if (dotPositionRange == 1.0) return Color.white;
+            else if (dotPositionRange >= 0.5) return Color.green;
             else if (dotPositionRange >= 0.25) return Color.yellow;
             else return Color.red;
         }

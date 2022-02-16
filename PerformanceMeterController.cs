@@ -95,58 +95,45 @@ namespace PerformanceMeter {
             graphObj.transform.SetParent(graphMask.transform);
             graphObj.transform.name = "GraphContainer";
 
-            bool hasPrimary = PluginConfig.Instance.mode != PluginConfig.MeasurementMode.None && energyList.Count > 0;
             bool hasSecondary = PluginConfig.Instance.secondaryMode != PluginConfig.MeasurementMode.None && secondaryEnergyList.Count > 0;
 
-            float width = 0;
-            if (hasPrimary && hasSecondary) {
-                if (energyList.Last().first > secondaryEnergyList.Last().first) {
-                    width = energyList.Last().first;
+            float width = 0.0f;
+            if (hasSecondary) {
+                if (energyList.Last().first > secondaryEnergyList.Last().first)
                     secondaryEnergyList.Add(new Pair<float, float>(width, secondaryEnergyList.Last().second));
-                } else if (secondaryEnergyList.Last().first > energyList.Last().first) {
-                    width = secondaryEnergyList.Last().first;
+                else if (secondaryEnergyList.Last().first > energyList.Last().first)
                     energyList.Add(new Pair<float, float>(width, energyList.Last().second));
-                } else
-                    width = secondaryEnergyList.Last().first;
-            } else if (hasPrimary) {
-                width = energyList.Last().first;
-            } else if (hasSecondary) {
-                width = secondaryEnergyList.Last().first;
-            } else
-                Logger.log.Warn("Both modes are set to None - the graph will be empty!");
+            }
+            width = energyList.Last().first;
 
-            if (width > 0) {
-                if (hasPrimary) {
-                    graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, PluginConfig.Instance.overrideColor, PluginConfig.Instance.sideColor, true);
-                }
+            graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, PluginConfig.Instance.overrideColor, PluginConfig.Instance.sideColor, true);
 
-                if (hasSecondary) {
-                    graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, PluginConfig.Instance.overrideSecondaryColor, PluginConfig.Instance.secondarySideColor, false);
-                }
+            if (hasSecondary)
+                graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, PluginConfig.Instance.overrideSecondaryColor, PluginConfig.Instance.secondarySideColor, false);
 
-                if (PluginConfig.Instance.showMisses) {
-                    var GraphTransform = graphObj.GetComponent<RectTransform>();
-                    var xSize = GraphTransform.sizeDelta.x / width;
-                    var ySize = GraphTransform.sizeDelta.y;
-                    foreach (float pos in misses) {
-                        var xPosition = pos * xSize;
-                        var dotPositionA = new Vector2(xPosition, 0);
-                        var dotPositionB = new Vector2(xPosition, ySize);
-                        var gameObject = new GameObject("DotConnection", typeof(Image));
-                        gameObject.transform.SetParent(GraphTransform, false);
-                        var image = gameObject.GetComponent<Image>();
-                        image.color = new Color(0.5f, 0.5f, 0.5f, 0.75f);
-                        var rectTransform = gameObject.GetComponent<RectTransform>();
-                        var dir = (dotPositionB - dotPositionA).normalized;
-                        var distance = Vector2.Distance(dotPositionA, dotPositionB);
-                        rectTransform.anchorMin = new Vector2(0, 0);
-                        rectTransform.anchorMax = new Vector2(0, 0);
-                        rectTransform.sizeDelta = new Vector2(distance, 0.0025f);
-                        rectTransform.anchoredPosition = dotPositionA + dir * distance * .5f;
-                        rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
-                    }
+            if (PluginConfig.Instance.showMisses) {
+                var GraphTransform = graphObj.GetComponent<RectTransform>();
+                var xSize = GraphTransform.sizeDelta.x / width;
+                var ySize = GraphTransform.sizeDelta.y;
+                foreach (float pos in misses) {
+                    var xPosition = pos * xSize;
+                    var dotPositionA = new Vector2(xPosition, 0);
+                    var dotPositionB = new Vector2(xPosition, ySize);
+                    var gameObject = new GameObject("DotConnection", typeof(Image));
+                    gameObject.transform.SetParent(GraphTransform, false);
+                    var image = gameObject.GetComponent<Image>();
+                    image.color = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                    var rectTransform = gameObject.GetComponent<RectTransform>();
+                    var dir = (dotPositionB - dotPositionA).normalized;
+                    var distance = Vector2.Distance(dotPositionA, dotPositionB);
+                    rectTransform.anchorMin = new Vector2(0, 0);
+                    rectTransform.anchorMax = new Vector2(0, 0);
+                    rectTransform.sizeDelta = new Vector2(distance, 0.0025f);
+                    rectTransform.anchoredPosition = dotPositionA + dir * distance * .5f;
+                    rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
                 }
             }
+
             StartCoroutine(WaitForMenu(graphObj, graphMask));
         }
 
@@ -158,7 +145,6 @@ namespace PerformanceMeter {
                     yield return new WaitForSeconds(0.1f);
                 } while (resultsController == null);
 
-                    yield return new WaitForSeconds(0.1f);
                 resultsController.continueButtonPressedEvent += DismissGraph;
                 resultsController.restartButtonPressedEvent += DismissGraph;
             } else {
@@ -168,7 +154,6 @@ namespace PerformanceMeter {
                     yield return new WaitForSeconds(0.1f);
                 } while (resultsController == null);
 
-                yield return new WaitForSeconds(0.1f);
                 resultsController.continueButtonPressedEvent += DismissGraph_Mission;
                 resultsController.retryButtonPressedEvent += DismissGraph_Mission;  
             }
@@ -199,15 +184,14 @@ namespace PerformanceMeter {
 
         void DismissGraph(ResultsViewController vc) {
             if (panel != null) {
-                Destroy(panel);
+                panel.SetActive(false);
+                Destroy(panel, 1);
                 panel = null;
                 scoreController = null;
                 energyCounter = null;
                 rankCounter = null;
                 audioController = null;
                 endActions = null;
-                averageHitValue = 0.0f;
-                averageHitValueSize = 0;
             }
             if (vc != null) {
                 vc.continueButtonPressedEvent -= DismissGraph;
@@ -233,6 +217,7 @@ namespace PerformanceMeter {
             energyList.Clear();
             secondaryEnergyList.Clear();
             misses.Clear();
+            
             if (PluginConfig.Instance.mode == PluginConfig.MeasurementMode.Energy)
                 energyList.Add(new Pair<float, float>(0.0f, 0.5f));
             if (PluginConfig.Instance.secondaryMode == PluginConfig.MeasurementMode.Energy)
@@ -246,7 +231,7 @@ namespace PerformanceMeter {
             if (endActions == null)
                 endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().LastOrDefault();
 
-            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null && audioController != null) {
+            if (endActions != null && scoreController != null && energyCounter != null && rankCounter != null && audioController != null) {
                 scoreController.noteWasCutEvent += NoteHit;
                 scoreController.noteWasMissedEvent += NoteMiss;
                 scoreController.comboBreakingEventHappenedEvent += ComboBreak;
@@ -260,10 +245,6 @@ namespace PerformanceMeter {
                 rankCounter = null;
                 audioController = null;
                 endActions = null;
-                averageHitValue = 0.0f;
-                averageHitValueSize = 0;
-                secondaryAverageHitValue = 0.0f;
-                secondaryAverageHitValueSize = 0;
             }
         }
 
@@ -273,18 +254,16 @@ namespace PerformanceMeter {
             private bool secondary;
             internal ScoreFinishEventHandler(PerformanceMeterController c, NoteData d, bool s) {controller = c; data = d; secondary = s;}
             public void HandleCutScoreBufferDidFinish(CutScoreBuffer cutScoreBuffer) {
-                if (secondary)
-                    controller.RecordHitValueSecondary(cutScoreBuffer, data, this);
-                else
+                if (!secondary)
                     controller.RecordHitValue(cutScoreBuffer, data, this);
+                else
+                    controller.RecordHitValueSecondary(cutScoreBuffer, data, this);
             }
         }
 
         private void RecordHitValue(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
             float newEnergy = 0;
             switch (PluginConfig.Instance.mode) {
-                case PluginConfig.MeasurementMode.None:
-                    return;
                 case PluginConfig.MeasurementMode.Energy:
                     newEnergy = energyCounter.energy;
                     break;

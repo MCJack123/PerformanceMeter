@@ -100,9 +100,9 @@ namespace PerformanceMeter {
             float width = 0.0f;
             if (hasSecondary) {
                 if (energyList.Last().first > secondaryEnergyList.Last().first)
-                    secondaryEnergyList.Add(new Pair<float, float>(width, secondaryEnergyList.Last().second));
+                    secondaryEnergyList.Add(new Pair<float, float>(energyList.Last().first, secondaryEnergyList.Last().second));
                 else if (secondaryEnergyList.Last().first > energyList.Last().first)
-                    energyList.Add(new Pair<float, float>(width, energyList.Last().second));
+                    energyList.Add(new Pair<float, float>(secondaryEnergyList.Last().first, energyList.Last().second));
             }
             width = energyList.Last().first;
 

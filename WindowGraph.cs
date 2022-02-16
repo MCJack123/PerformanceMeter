@@ -75,15 +75,9 @@ namespace PerformanceMeter {
 
         private void setColorMode(PluginConfig.MeasurementMode mode, bool isPrimaryMode, bool colorOverride, Color sideColor) {
             if (colorOverride) {
-                if (isPrimaryMode)
-                    dotColor = ColorMode_Override;
-                else
-                    dotColor = ColorMode_SecondaryOverride;
+                dotColor = isPrimaryMode ? ColorMode_Override : ColorMode_SecondaryOverride;
             } else if (sideColor != Color.white) {
-                if (isPrimaryMode)
-                    dotColor = ColorMode_Side;
-                else
-                    dotColor = ColorMode_SecondarySide;
+                dotColor = isPrimaryMode ? ColorMode_Side : ColorMode_SecondarySide;
             } else {
                 switch (mode) {
                     case PluginConfig.MeasurementMode.Energy:

@@ -5,7 +5,7 @@
  * This file defines the entry points of PerformanceMeter.
  *
  * This code is licensed under the MIT license.
- * Copyright (c) 2021 JackMacWindows.
+ * Copyright (c) 2021-2022 JackMacWindows.
  */
 
 using IPA;

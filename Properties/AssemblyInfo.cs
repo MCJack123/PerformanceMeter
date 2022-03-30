@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PerformanceMeter")]
-[assembly: AssemblyCopyright("Copyright © 2022 SHv2")]
+[assembly: AssemblyCopyright("Copyright © 2021-2022 JackMacWindows")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -5,7 +5,7 @@
  * This file defines the main functionality of PerformanceMeter.
  *
  * This code is licensed under the MIT license.
- * Copyright (c) 2021 JackMacWindows.
+ * Copyright (c) 2021-2022 JackMacWindows.
  */
 
 using System.Collections;
@@ -79,6 +79,20 @@ namespace PerformanceMeter {
             text.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
             text.GetComponent<RectTransform>().localPosition = new Vector3(-0.3f, -0.25f, 0.1f);
             text.GetComponent<RectTransform>().sizeDelta = new Vector2(75.0f, 25.0f);
+
+            GameObject textObj2 = new GameObject("Label");
+            textObj2.transform.SetParent(canvas.transform);
+            textObj2.transform.Rotate(22.5f, 0, 0, Space.World);
+            HMUI.CurvedTextMeshPro text2 = textObj2.AddComponent<HMUI.CurvedTextMeshPro>();
+            text2.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF"));
+            text2.fontSize = 9.0f;
+            text2.alignment = TextAlignmentOptions.Right;
+            text2.text = "By JackMacWindows#9776";
+            text2.color = new Color(0.3f, 0.3f, 0.3f);
+            text2.enableAutoSizing = true;
+            text2.transform.localScale = new Vector3(0.002f, 0.002f, 0.002f);
+            text2.GetComponent<RectTransform>().localPosition = new Vector3(0.31f, -0.2625f, 0.1f);
+            text2.GetComponent<RectTransform>().sizeDelta = new Vector2(175.0f, 16.0f);
 
             GameObject graphMask = new GameObject("GraphMask");
             graphMask.AddComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.45f, 2.275f);
@@ -262,13 +276,13 @@ namespace PerformanceMeter {
         }
 
         private void RecordHitValue(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
-            float newEnergy = 0;
+            float newEnergy;
             switch (PluginConfig.Instance.mode) {
                 case PluginConfig.MeasurementMode.Energy:
                     newEnergy = energyCounter.energy;
                     break;
                 case PluginConfig.MeasurementMode.PercentModified:
-                    newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore;
+                    newEnergy = (float)scoreController.prevFrameModifiedScore / scoreController.immediateMaxPossibleRawScore;
                     break;
                 case PluginConfig.MeasurementMode.PercentRaw:
                     newEnergy = rankCounter.relativeScore;
@@ -300,7 +314,7 @@ namespace PerformanceMeter {
         }
 
         private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
-            float newEnergy = 0;
+            float newEnergy;
             switch (PluginConfig.Instance.secondaryMode) {
                 case PluginConfig.MeasurementMode.None:
                     return;
@@ -308,7 +322,7 @@ namespace PerformanceMeter {
                     newEnergy = energyCounter.energy;
                     break;
                 case PluginConfig.MeasurementMode.PercentModified:
-                    newEnergy = (float)scoreController.prevFrameModifiedScore / (float)scoreController.immediateMaxPossibleRawScore;
+                    newEnergy = (float)scoreController.prevFrameModifiedScore / scoreController.immediateMaxPossibleRawScore;
                     break;
                 case PluginConfig.MeasurementMode.PercentRaw:
                     newEnergy = rankCounter.relativeScore;

@@ -42,7 +42,7 @@ namespace PerformanceMeter {
             var yPosition = valueList[0].second * graphHeight;
             var newPosition = new Vector2(xPosition, yPosition);
             var lastPosition = newPosition;
-            GameObject dotConnectionGameObject = null;
+            GameObject dotConnectionGameObject;
             for (var i = 1; i < valueList.Count; i++) {
                 xPosition = valueList[i].first * xStep;
                 yPosition = valueList[i].second * graphHeight;

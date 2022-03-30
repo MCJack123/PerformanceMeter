@@ -127,5 +127,8 @@ These set the color for each graph. Colors are 24-bit hexadecimal colors (e.g. `
 #### `override[Secondary]Color`
 These toggle whether the override color is enabled for each graph. If set to `true`, the color in `[secondary]Color` will be used; otherwise the default color will be used.
 
+## Special Thanks
+Thanks to @SHv2 for rewriting a significant chunk of the code to improve style and performance.
+
 ## License
 PerformanceMeter is licensed under the MIT license. See LICENSE for more info.

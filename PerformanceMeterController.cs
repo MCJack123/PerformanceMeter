@@ -8,6 +8,7 @@
  * Copyright (c) 2021-2022 JackMacWindows.
  */
 
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,12 +36,16 @@ namespace PerformanceMeter {
         float secondaryAverageHitValue = 0.0f;
         int secondaryAverageHitValueSize = 0;
         ScoreController scoreController;
+        BeatmapObjectManager objectManager;
+        IComboController comboController;
         GameEnergyCounter energyCounter;
         RelativeScoreAndImmediateRankCounter rankCounter;
         AudioTimeSyncController audioController;
         GameObject panel;
         ILevelEndActions endActions;
         bool levelOk = false;
+        static readonly FieldInfo _beatmapObjectManager = typeof(ScoreController).GetField("_beatmapObjectManager", BindingFlags.NonPublic | BindingFlags.Instance);
+        static readonly FieldInfo _comboController = typeof(ComboUIController).GetField("_comboController", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public void ShowResults() {
             if (!levelOk)
@@ -202,6 +207,8 @@ namespace PerformanceMeter {
                 Destroy(panel, 1);
                 panel = null;
                 scoreController = null;
+                objectManager = null;
+                comboController = null;
                 energyCounter = null;
                 rankCounter = null;
                 audioController = null;
@@ -238,6 +245,7 @@ namespace PerformanceMeter {
                 secondaryEnergyList.Add(new Pair<float, float>(0.0f, 0.5f));
 
             scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().LastOrDefault();
+            ComboUIController comboUIController = Resources.FindObjectsOfTypeAll<ComboUIController>().LastOrDefault();
             energyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().LastOrDefault();
             rankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().LastOrDefault();
             audioController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().LastOrDefault();
@@ -245,16 +253,20 @@ namespace PerformanceMeter {
             if (endActions == null)
                 endActions = Resources.FindObjectsOfTypeAll<MissionLevelGameplayManager>().LastOrDefault();
 
-            if (endActions != null && scoreController != null && energyCounter != null && rankCounter != null && audioController != null) {
-                scoreController.noteWasCutEvent += NoteHit;
-                scoreController.noteWasMissedEvent += NoteMiss;
-                scoreController.comboBreakingEventHappenedEvent += ComboBreak;
+            if (endActions != null && scoreController != null && energyCounter != null && rankCounter != null && audioController != null && comboUIController != null) {
+                objectManager = (BeatmapObjectManager)_beatmapObjectManager.GetValue(scoreController);
+                comboController = (ComboController)_comboController.GetValue(comboUIController);
+                objectManager.noteWasCutEvent += NoteHit;
+                objectManager.noteWasMissedEvent += NoteMiss;
+                comboController.comboBreakingEventHappenedEvent += ComboBreak;
                 endActions.levelFinishedEvent += LevelFinished;
                 endActions.levelFailedEvent += LevelFinished;
                 Logger.log.Debug("PerformanceMeter reloaded successfully");
             } else {
                 Logger.log.Error("Could not reload PerformanceMeter. This may occur when playing online - if so, disregard this message.");
                 scoreController = null;
+                objectManager = null;
+                comboController = null;
                 energyCounter = null;
                 rankCounter = null;
                 audioController = null;
@@ -262,7 +274,7 @@ namespace PerformanceMeter {
             }
         }
 
-        private class ScoreFinishEventHandler : ICutScoreBufferDidFinishEvent {
+        private class ScoreFinishEventHandler : ICutScoreBufferDidFinishReceiver {
             private PerformanceMeterController controller;
             private NoteData data;
             private bool secondary;
@@ -282,7 +294,7 @@ namespace PerformanceMeter {
                     newEnergy = energyCounter.energy;
                     break;
                 case PluginConfig.MeasurementMode.PercentModified:
-                    newEnergy = (float)scoreController.prevFrameModifiedScore / scoreController.immediateMaxPossibleRawScore;
+                    newEnergy = (float)scoreController.modifiedScore / scoreController.immediateMaxPossibleModifiedScore;
                     break;
                 case PluginConfig.MeasurementMode.PercentRaw:
                     newEnergy = rankCounter.relativeScore;
@@ -291,13 +303,13 @@ namespace PerformanceMeter {
                     if (score == null)
                         return;
 
-                    newEnergy = score.scoreWithMultiplier / 115.0f;
+                    newEnergy = score.cutScore / 115.0f;
                     break;
                 case PluginConfig.MeasurementMode.AvgCutValue:
                     if (score == null)
                         return;
 
-                    averageHitValue = ((averageHitValue * averageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++averageHitValueSize;
+                    averageHitValue = ((averageHitValue * averageHitValueSize) + score.cutScore / 115.0f) / ++averageHitValueSize;
                     newEnergy = averageHitValue;
                     break;
                 default:
@@ -310,7 +322,7 @@ namespace PerformanceMeter {
             energyList.Add(new Pair<float, float>(data.time, newEnergy));
 
             if (score != null)
-                score.didFinishEvent.Remove(fn);
+                score.UnregisterDidFinishReceiver(fn);
         }
 
         private void RecordHitValueSecondary(CutScoreBuffer score, NoteData data, ScoreFinishEventHandler fn) {
@@ -322,7 +334,7 @@ namespace PerformanceMeter {
                     newEnergy = energyCounter.energy;
                     break;
                 case PluginConfig.MeasurementMode.PercentModified:
-                    newEnergy = (float)scoreController.prevFrameModifiedScore / scoreController.immediateMaxPossibleRawScore;
+                    newEnergy = (float)scoreController.modifiedScore / scoreController.immediateMaxPossibleModifiedScore;
                     break;
                 case PluginConfig.MeasurementMode.PercentRaw:
                     newEnergy = rankCounter.relativeScore;
@@ -331,13 +343,13 @@ namespace PerformanceMeter {
                     if (score == null)
                         return;
                     
-                    newEnergy = score.scoreWithMultiplier / 115.0f;
+                    newEnergy = score.cutScore / 115.0f;
                     break;
                 case PluginConfig.MeasurementMode.AvgCutValue:
                     if (score == null)
                         return;
 
-                    secondaryAverageHitValue = ((secondaryAverageHitValue * secondaryAverageHitValueSize) + score.scoreWithMultiplier / 115.0f) / ++secondaryAverageHitValueSize;
+                    secondaryAverageHitValue = ((secondaryAverageHitValue * secondaryAverageHitValueSize) + score.cutScore / 115.0f) / ++secondaryAverageHitValueSize;
                     newEnergy = secondaryAverageHitValue;
                     break;
                 default:
@@ -350,37 +362,37 @@ namespace PerformanceMeter {
             secondaryEnergyList.Add(new Pair<float, float>(data.time, newEnergy));
             
             if (score != null)
-                score.didFinishEvent.Remove(fn);
+                score.UnregisterDidFinishReceiver(fn);
         }
 
-        private void NoteHit(NoteData data, in NoteCutInfo info, int multiplier) {
+        private void NoteHit(NoteController controller, in NoteCutInfo info) {
             PluginConfig.MeasurementSide side = PluginConfig.Instance.side;
             if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
-                if (info.swingRatingCounter == null) {
-                    RecordHitValue(null, data, null);
+                if (info.noteData == null) {
+                    RecordHitValue(null, controller.noteData, null);
                 } else {
-                    ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, data, false);
+                    ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, controller.noteData, false);
                     CutScoreBuffer buf = new CutScoreBuffer();
-                    buf.Init(info, 1);
-                    buf.didFinishEvent.Add(handler);
+                    buf.Init(info);
+                    buf.RegisterDidFinishReceiver(handler);
                 }
             }
             side = PluginConfig.Instance.secondarySide;
             if (side == PluginConfig.MeasurementSide.Both || (side == PluginConfig.MeasurementSide.Left && info.saberType == SaberType.SaberA) || (side == PluginConfig.MeasurementSide.Right && info.saberType == SaberType.SaberB)) {
-                if (info.swingRatingCounter == null) {
-                    RecordHitValueSecondary(null, data, null);
+                if (info.noteData == null) {
+                    RecordHitValueSecondary(null, controller.noteData, null);
                 } else {
-                    ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, data, true);
+                    ScoreFinishEventHandler handler = new ScoreFinishEventHandler(this, controller.noteData, true);
                     CutScoreBuffer buf = new CutScoreBuffer();
-                    buf.Init(info, 1);
-                    buf.didFinishEvent.Add(handler);
+                    buf.Init(info);
+                    buf.RegisterDidFinishReceiver(handler);
                 }
             }
         }
 
-        private void NoteMiss(NoteData data, int score) {
-            RecordHitValue(null, data, null);
-            RecordHitValueSecondary(null, data, null);
+        private void NoteMiss(NoteController controller) {
+            RecordHitValue(null, controller.noteData, null);
+            RecordHitValueSecondary(null, controller.noteData, null);
         }
 
         private void ComboBreak() {
@@ -388,11 +400,11 @@ namespace PerformanceMeter {
         }
 
         private void LevelFinished() {
-            if (scoreController != null && energyCounter != null && rankCounter != null && endActions != null) {
+            if (objectManager != null && energyCounter != null && rankCounter != null && endActions != null) {
                 levelOk = true;
-                scoreController.noteWasCutEvent -= NoteHit;
-                scoreController.noteWasMissedEvent -= NoteMiss;
-                scoreController.comboBreakingEventHappenedEvent -= ComboBreak;
+                objectManager.noteWasCutEvent -= NoteHit;
+                objectManager.noteWasMissedEvent -= NoteMiss;
+                comboController.comboBreakingEventHappenedEvent -= ComboBreak;
                 endActions.levelFinishedEvent -= LevelFinished;
                 endActions.levelFailedEvent -= LevelFinished;
             }

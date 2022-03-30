@@ -39,7 +39,7 @@ namespace PerformanceMeter {
         public void OnApplicationStart() {
             Logger.log.Debug("OnApplicationStart");
             new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
-            BSEvents.gameSceneActive += GameSceneActive;
+            BSEvents.gameSceneLoaded += GameSceneActive;
             SceneManager.activeSceneChanged += ActiveSceneChanged;
             BSMLSettings.instance.AddSettingsMenu("PerformanceMeter", "PerformanceMeter.Settings", Settings.instance);
         }

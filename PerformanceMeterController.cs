@@ -114,18 +114,38 @@ namespace PerformanceMeter {
             graphObj.transform.SetParent(graphMask.transform);
             graphObj.transform.name = "GraphContainer";
 
+            bool hasPrimary = PluginConfig.Instance.mode != PluginConfig.MeasurementMode.None && energyList.Count > 0;
             bool hasSecondary = PluginConfig.Instance.secondaryMode != PluginConfig.MeasurementMode.None && secondaryEnergyList.Count > 0;
 
+            if (!hasPrimary && !hasSecondary) {
+                GameObject textObj3 = new GameObject("Label");
+                textObj3.transform.SetParent(canvas.transform);
+                textObj3.transform.Rotate(22.5f, 0, 0, Space.World);
+                HMUI.CurvedTextMeshPro text3 = textObj3.AddComponent<HMUI.CurvedTextMeshPro>();
+                text3.font = Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF"));
+                text3.fontSize = 48.0f;
+                text3.alignment = TextAlignmentOptions.Center;
+                text3.text = "No data available";
+                text3.color = new Color(0.3f, 0.3f, 0.3f);
+                text3.enableAutoSizing = true;
+                text3.transform.localScale = new Vector3(0.002f, 0.002f, 0.002f);
+                text3.GetComponent<RectTransform>().localPosition = new Vector3(0f, 0f, 0f);
+                text3.GetComponent<RectTransform>().sizeDelta = new Vector2(800.0f, 80.0f);
+                StartCoroutine(WaitForMenu(graphObj, graphMask));
+                return;
+            }
+
             float width = 0.0f;
-            if (hasSecondary) {
+            if (hasPrimary && hasSecondary) {
                 if (energyList.Last().first > secondaryEnergyList.Last().first)
                     secondaryEnergyList.Add(new Pair<float, float>(energyList.Last().first, secondaryEnergyList.Last().second));
                 else if (secondaryEnergyList.Last().first > energyList.Last().first)
                     energyList.Add(new Pair<float, float>(secondaryEnergyList.Last().first, energyList.Last().second));
             }
-            width = energyList.Last().first;
+            width = hasPrimary ? energyList.Last().first : secondaryEnergyList.Last().first;
 
-            graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, PluginConfig.Instance.overrideColor, PluginConfig.Instance.sideColor, true);
+            if (hasPrimary)
+                graphMask.AddComponent<WindowGraph>().ShowGraph(energyList, PluginConfig.Instance.mode, width, PluginConfig.Instance.overrideColor, PluginConfig.Instance.sideColor, true);
 
             if (hasSecondary)
                 graphMask.AddComponent<WindowGraph>().ShowGraph(secondaryEnergyList, PluginConfig.Instance.secondaryMode, width, PluginConfig.Instance.overrideSecondaryColor, PluginConfig.Instance.secondarySideColor, false);

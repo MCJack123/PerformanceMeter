@@ -69,8 +69,6 @@ namespace PerformanceMeter {
             PluginConfig.Instance.secondaryMode = (PluginConfig.MeasurementMode)secondaryModeOptions.FindIndex(a => a.ToString() == secondaryListChoice);
             PluginConfig.Instance.side = (PluginConfig.MeasurementSide)sideOptions.FindIndex(a => a.ToString() == sideChoice);
             PluginConfig.Instance.secondarySide = (PluginConfig.MeasurementSide)sideOptions.FindIndex(a => a.ToString() == secondarySideChoice);
-            PluginConfig.Instance.sideColor = PluginConfig.Instance.GetSideColor(PluginConfig.Instance.side);
-            PluginConfig.Instance.secondarySideColor = PluginConfig.Instance.GetSideColor(PluginConfig.Instance.secondarySide);
             PluginConfig.Instance.Changed();
         }
 

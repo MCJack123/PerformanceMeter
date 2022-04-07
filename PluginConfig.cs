@@ -37,13 +37,31 @@ namespace PerformanceMeter {
         [UseConverter(typeof(NumericEnumConverter<MeasurementSide>))]
         public virtual MeasurementSide side { get; set; } = MeasurementSide.Both;
         [UseConverter(typeof(IntColorConverter))]
-        public virtual Color sideColor { get; set; } = Color.white;
+        public Color sideColor {
+            get {
+                return side switch {
+                    MeasurementSide.Left => Color.red,
+                    MeasurementSide.Right => Color.blue,
+                    MeasurementSide.Both => Color.white,
+                    _ => Color.white,
+                };
+            }
+        }
         [UseConverter(typeof(NumericEnumConverter<MeasurementMode>))]
         public virtual MeasurementMode secondaryMode { get; set; } = MeasurementMode.None;
         [UseConverter(typeof(NumericEnumConverter<MeasurementSide>))]
         public virtual MeasurementSide secondarySide { get; set; } = MeasurementSide.Both;
         [UseConverter(typeof(IntColorConverter))]
-        public virtual Color secondarySideColor { get; set; } = Color.white;
+        public Color secondarySideColor {
+            get {
+                return secondarySide switch {
+                    MeasurementSide.Left => Color.red,
+                    MeasurementSide.Right => Color.blue,
+                    MeasurementSide.Both => Color.white,
+                    _ => Color.white,
+                };
+            }
+        }
         public virtual bool showMisses { get; set; } = false;
         public virtual float animationDuration { get; set; } = 3.0f;
         [UseConverter(typeof(IntColorConverter))]
@@ -52,14 +70,6 @@ namespace PerformanceMeter {
         public virtual Color secondaryColor { get; set; } = new Color(0f, 0f, 1f);
         public virtual bool overrideColor { get; set; } = false;
         public virtual bool overrideSecondaryColor { get; set; } = false;
-        internal Color GetSideColor(MeasurementSide side) {
-            return side switch {
-                MeasurementSide.Left => Color.red,
-                MeasurementSide.Right => Color.blue,
-                MeasurementSide.Both => Color.white,
-                _ => Color.white,
-            };
-        }
 
         public enum MeasurementMode {
             Energy,

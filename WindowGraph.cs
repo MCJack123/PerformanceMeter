@@ -16,148 +16,52 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace PerformanceMeter {
-    public class WindowGraph : MonoBehaviour
-    {
+    public class WindowGraph : MonoBehaviour {
         public RectTransform    GraphContainer { get; private set; }
-        public List<GameObject> DotObjects     { get; private set; }
         public List<GameObject> LinkObjects    { get; private set; }
-        /*public List<GameObject> LabelXObjects  { get; private set; }
-        public List<GameObject> LabelYObjects  { get; private set; }
-        public List<GameObject> DashXObjects   { get; private set; }
-        public List<GameObject> DashYObjects   { get; private set; }*/
 
-        private void Awake()
-        {
+        public delegate Color ColorMode_Selection(float dotPositionRage);
+        private ColorMode_Selection dotColor;
+
+        private void Awake() {
             GraphContainer = transform.Find("GraphContainer").GetComponent<RectTransform>();
-            if (GraphContainer == null) Logger.log.Error("Could not find GraphContainer");
+            if (GraphContainer == null)
+                Logger.log.Error("Could not find GraphContainer");
 
-            DotObjects = new List<GameObject>();
             LinkObjects = new List<GameObject>();
-            //LabelXObjects = new List<GameObject>();
-            //LabelYObjects = new List<GameObject>();
-            //DashXObjects = new List<GameObject>();
-            //DashYObjects = new List<GameObject>();
         }
 
-        public void ShowGraph(List<Pair<float, float>> valueList, bool isSecondary, float xMaximum, Color overrideColor)
-        {
-            if (DotObjects != null)
-            {
-                foreach (var go in DotObjects)
-                    Destroy(go);
-                DotObjects.Clear();
-            }
-            if (LinkObjects != null)
-            {
-                foreach (var go in LinkObjects)
-                    Destroy(go);
-                LinkObjects.Clear();
-            }
-            /*if (LabelXObjects != null)
-            {
-                foreach (var go in LabelXObjects)
-                    Destroy(go);
-                LabelXObjects.Clear();
-            }
-            if (LabelYObjects != null)
-            {
-                foreach (var go in LabelYObjects)
-                    Destroy(go);
-                LabelYObjects.Clear();
-            }
-            if (DashXObjects != null)
-            {
-                foreach (var go in DashXObjects)
-                    Destroy(go);
-                DashXObjects.Clear();
-            }
-            if (DashYObjects != null)
-            {
-                foreach (var go in DashYObjects)
-                    Destroy(go);
-                DashYObjects.Clear();
-            }*/
-
+        public void ShowGraph(List<Pair<float, float>> valueList, PluginConfig.MeasurementMode mode, float xMaximum, bool colorOverride, Color sideColor, bool isPrimaryMode) {
             var graphWidth = GraphContainer.sizeDelta.x;
             var graphHeight = GraphContainer.sizeDelta.y;
+            var xStep = graphWidth / xMaximum;
 
-            var yMaximum = 1.0f;
-            var yMinimum = 0.0f;
+            setColorMode(mode, isPrimaryMode, colorOverride, sideColor);
 
-            var xSize = graphWidth / xMaximum;
-            var xIndex = 0;
-
-            GameObject lastCircleGameObject = null;
-            for (var i = 0; i < valueList.Count; i++)
-            {
-                var xPosition = valueList[i].first * xSize;
-                var yPosition = (valueList[i].second - yMinimum) / (yMaximum - yMinimum) * graphHeight;
-                var circleGameObject = CreateCircle(new Vector2(xPosition, yPosition), false);
-                DotObjects.Add(circleGameObject);
-                if (lastCircleGameObject != null)
-                {
-                    var dotConnectionGameObject = CreateDotConnection(lastCircleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      circleGameObject.GetComponent<RectTransform>().anchoredPosition,
-                                                                      true, graphHeight, isSecondary, overrideColor);
-                    LinkObjects.Add(dotConnectionGameObject);
-                }
-                lastCircleGameObject = circleGameObject;
-
-                xIndex++;
+            var xPosition = valueList[0].first * xStep;
+            var yPosition = valueList[0].second * graphHeight;
+            var newPosition = new Vector2(xPosition, yPosition);
+            var lastPosition = newPosition;
+            GameObject dotConnectionGameObject;
+            for (var i = 1; i < valueList.Count; i++) {
+                xPosition = valueList[i].first * xStep;
+                yPosition = valueList[i].second * graphHeight;
+                newPosition = new Vector2(xPosition, yPosition);
+                dotConnectionGameObject = CreateDotConnection(lastPosition, newPosition, graphHeight);
+                LinkObjects.Add(dotConnectionGameObject);
+                lastPosition = newPosition;
             }
         }
 
-        private GameObject CreateCircle(Vector2 anchoredPosition, bool makeDotsVisible)
-        {
-            var gameObject = new GameObject("Circle", typeof(Image));
-            gameObject.transform.SetParent(GraphContainer, false);
-            var image = gameObject.GetComponent<Image>();
-            image.enabled = makeDotsVisible;
-            var rectTransform = gameObject.GetComponent<RectTransform>();
-            rectTransform.anchoredPosition = anchoredPosition;
-            rectTransform.sizeDelta = new Vector2(0.02f, 0.02f);
-            rectTransform.anchorMin = new Vector2(0, 0);
-            rectTransform.anchorMax = new Vector2(0, 0);
-            return gameObject;
-        }
-
-        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, bool makeLinkVisible, float graphHeight, bool isSecondary, Color overrideColor)
-        {
+        private GameObject CreateDotConnection(Vector2 dotPositionA, Vector2 dotPositionB, float graphHeight) {
+            float dotPositionRange = dotPositionB.y / graphHeight;
             var gameObject = new GameObject("DotConnection", typeof(Image));
+            
             gameObject.transform.SetParent(GraphContainer, false);
             var image = gameObject.GetComponent<Image>();
-            if (isSecondary ? PluginConfig.Instance.overrideSecondaryColor : PluginConfig.Instance.overrideColor) image.color = PluginConfig.Instance.GetColor(isSecondary);
-            else if (overrideColor != Color.white /* null */) image.color = overrideColor;
-            else {
-                switch (PluginConfig.Instance.GetMode(isSecondary)) {
-                    case PluginConfig.MeasurementMode.Energy:
-                        if (dotPositionB.y / graphHeight <= 1.0 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.green;
-                        else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.25) image.color = Color.yellow;
-                        else if (dotPositionB.y / graphHeight < 0.25 && dotPositionB.y / graphHeight >= 0) image.color = Color.red;
-                        else image.color = Color.white;
-                        break;
-                    case PluginConfig.MeasurementMode.PercentModified:
-                    case PluginConfig.MeasurementMode.PercentRaw:
-                        if (dotPositionB.y / graphHeight < 0.9 && dotPositionB.y / graphHeight >= 0.8) image.color = Color.white;
-                        else if (dotPositionB.y / graphHeight < 0.8 && dotPositionB.y / graphHeight >= 0.65) image.color = Color.green;
-                        else if (dotPositionB.y / graphHeight < 0.65 && dotPositionB.y / graphHeight >= 0.5) image.color = Color.yellow;
-                        else if (dotPositionB.y / graphHeight < 0.5 && dotPositionB.y / graphHeight >= 0.35) image.color = new Color(1.0f, 0.5f, 0.0f, 1.0f);
-                        else if (dotPositionB.y / graphHeight < 0.35) image.color = Color.red;
-                        else image.color = Color.cyan;
-                        break;
-                    case PluginConfig.MeasurementMode.CutValue:
-                    case PluginConfig.MeasurementMode.AvgCutValue:
-                        if (dotPositionB.y / graphHeight == 1.0) image.color = Color.white;
-                        else if (dotPositionB.y / graphHeight < 1.0 && dotPositionB.y / graphHeight >= 101.0/115.0) image.color = Color.green;
-                        else if (dotPositionB.y / graphHeight < 101.0/115.0 && dotPositionB.y / graphHeight >= 90.0/115.0) image.color = Color.yellow;
-                        else if (dotPositionB.y / graphHeight < 90.0/115.0 && dotPositionB.y / graphHeight >= 80.0/115.0) image.color = new Color(1.0f, 0.6f, 0.0f);
-                        else if (dotPositionB.y / graphHeight < 80.0/115.0 && dotPositionB.y / graphHeight >= 60.0/115.0) image.color = Color.red;
-                        else if (dotPositionB.y / graphHeight < 60.0/115.0 && dotPositionB.y / graphHeight >= 0.0) image.color = new Color(0.5f, 0.0f, 0.0f);
-                        else image.color = Color.cyan;
-                        break;
-                }
-            }
-            image.enabled = makeLinkVisible;
+
+            image.color = dotColor(dotPositionRange);
+            image.enabled = true;
             var rectTransform = gameObject.GetComponent<RectTransform>();
             var dir = (dotPositionB - dotPositionA).normalized;
             var distance = Vector2.Distance(dotPositionA, dotPositionB);
@@ -167,6 +71,68 @@ namespace PerformanceMeter {
             rectTransform.anchoredPosition = dotPositionA + dir * distance * .5f;
             rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
             return gameObject;
+        }
+
+        private void setColorMode(PluginConfig.MeasurementMode mode, bool isPrimaryMode, bool colorOverride, Color sideColor) {
+            if (colorOverride) {
+                dotColor = isPrimaryMode ? ColorMode_Override : ColorMode_SecondaryOverride;
+            } else if (sideColor != Color.white) {
+                dotColor = isPrimaryMode ? ColorMode_Side : ColorMode_SecondarySide;
+            } else {
+                switch (mode) {
+                    case PluginConfig.MeasurementMode.Energy:
+                        dotColor = ColorMode_Energy;
+                        break;
+                    case PluginConfig.MeasurementMode.PercentModified:
+                    case PluginConfig.MeasurementMode.PercentRaw:
+                        dotColor = ColorMode_PercentModifedRaw;
+                        break;
+                    case PluginConfig.MeasurementMode.CutValue:
+                    case PluginConfig.MeasurementMode.AvgCutValue:
+                        dotColor = ColorMode_CutAvgCut;
+                        break;
+                }
+            }
+        }
+        
+        private Color ColorMode_Override(float notUsed) {
+            return PluginConfig.Instance.color;
+        }
+
+        private Color ColorMode_SecondaryOverride(float notUsed) {
+            return PluginConfig.Instance.secondaryColor;
+        }
+        private Color ColorMode_Side(float notUsed) {
+            return PluginConfig.Instance.sideColor;
+        }
+
+        private Color ColorMode_SecondarySide(float notUsed) {
+            return PluginConfig.Instance.secondarySideColor;
+        }
+
+        private Color ColorMode_Energy(float dotPositionRange) {
+            if (dotPositionRange == 1.0) return Color.white;
+            else if (dotPositionRange >= 0.5) return Color.green;
+            else if (dotPositionRange >= 0.25) return Color.yellow;
+            else return Color.red;
+        }
+
+        private Color ColorMode_PercentModifedRaw(float dotPositionRange) {
+            if (dotPositionRange >= 0.9) return Color.cyan;
+            else if (dotPositionRange >= 0.8) return Color.white;
+            else if (dotPositionRange >= 0.65) return Color.green;
+            else if (dotPositionRange >= 0.5) return Color.yellow;
+            else if (dotPositionRange >= 0.35) return new Color(1.0f, 0.5f, 0.0f, 1.0f);
+            else return Color.red;
+        }
+
+        private Color ColorMode_CutAvgCut(float dotPositionRange) {
+            if (dotPositionRange == 1.0) return Color.white;
+            else if (dotPositionRange >= 0.87) return Color.green;                 // ~ 101.0/115.0
+            else if (dotPositionRange >= 0.78) return Color.yellow;                // ~  90.0/115.0
+            else if (dotPositionRange >= 0.69) return new Color(1.0f, 0.6f, 0.0f); // ~  80.0/115.0
+            else if (dotPositionRange >= 0.52) return Color.red;                   // ~  60.0/115.0
+            else return new Color(0.5f, 0.0f, 0.0f);
         }
     }
 }

@@ -5,7 +5,7 @@
  * This file defines the entry points of PerformanceMeter.
  *
  * This code is licensed under the MIT license.
- * Copyright (c) 2021 JackMacWindows.
+ * Copyright (c) 2021-2022 JackMacWindows.
  */
 
 using IPA;
@@ -39,7 +39,7 @@ namespace PerformanceMeter {
         public void OnApplicationStart() {
             Logger.log.Debug("OnApplicationStart");
             new GameObject("PerformanceMeterController").AddComponent<PerformanceMeterController>();
-            BSEvents.gameSceneActive += GameSceneActive;
+            BSEvents.gameSceneLoaded += GameSceneActive;
             SceneManager.activeSceneChanged += ActiveSceneChanged;
             BSMLSettings.instance.AddSettingsMenu("PerformanceMeter", "PerformanceMeter.Settings", Settings.instance);
         }
@@ -52,11 +52,13 @@ namespace PerformanceMeter {
         }
 
         void GameSceneActive() {
-            if (PluginConfig.Instance.enabled) PerformanceMeterController.instance.GetControllers();
+            if (PluginConfig.Instance.enabled)
+                PerformanceMeterController.instance.GetControllers();
         }
 
         void ActiveSceneChanged(Scene oldScene, Scene newScene) {
-            if (PluginConfig.Instance.enabled && newScene.name == "MainMenu") PerformanceMeterController.instance.ShowResults();
+            if (PluginConfig.Instance.enabled && newScene.name == "MainMenu")
+                PerformanceMeterController.instance.ShowResults();
         }
     }
 

@@ -4,10 +4,10 @@ A Beat Saber mod to show a graph of your energy bar, percentage level, or cut va
 ![Image](screenshot.png)
 
 ## Requirements
-* Beat Saber 1.19.0 or compatible
-* BSIPA 4.2.1
-* Beat Saber Utils 1.11.1
-* BeatSaberMarkupLanguage 1.6.0
+* Beat Saber 1.20.0 or compatible
+* BSIPA 4.2.2
+* Beat Saber Utils 1.12.1
+* BeatSaberMarkupLanguage 1.6.3
 
 ## Installation
 Simply drop the latest PerformanceMeter.dll plugin file into your Plugins folder, inside the main Beat Saber installation directory.
@@ -126,6 +126,9 @@ These set the color for each graph. Colors are 24-bit hexadecimal colors (e.g. `
 
 #### `override[Secondary]Color`
 These toggle whether the override color is enabled for each graph. If set to `true`, the color in `[secondary]Color` will be used; otherwise the default color will be used.
+
+## Special Thanks
+Thanks to @SHv2 for rewriting a significant chunk of the code to improve style and performance.
 
 ## License
 PerformanceMeter is licensed under the MIT license. See LICENSE for more info.

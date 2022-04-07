@@ -5,30 +5,71 @@
  * This file defines the configuration of PerformanceMeter.
  *
  * This code is licensed under the MIT license.
- * Copyright (c) 2021 JackMacWindows.
+ * Copyright (c) 2021-2022 JackMacWindows.
  */
 
 using System.Runtime.CompilerServices;
+using IPA.Config.Data;
 using IPA.Config.Stores;
+using IPA.Config.Stores.Attributes;
+using IPA.Config.Stores.Converters;
+using UnityEngine;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
 namespace PerformanceMeter {
+    internal class IntColorConverter : ValueConverter<Color> {
+        public override Color FromValue(Value value, object parent) {
+            if (!(value is Integer)) throw new System.ArgumentException("Input value is not an integer");
+            long num = (value as Integer).Value;
+            return new Color(((num >> 16) & 0xFF) / 255.0f, ((num >> 8) & 0xFF) / 255.0f, (num & 0xFF) / 255.0f);
+        }
+
+        public override Value ToValue(Color obj, object parent) {
+            return new Integer((long)(obj.r * 255) << 16 | (long)(obj.g * 255) << 8 | (long)(obj.b * 255));
+        }
+    }
+
     public class PluginConfig {
         public static PluginConfig Instance { get; set; }
         public virtual bool enabled { get; set; } = true;
-        public virtual int mode { get; set; } = (int)MeasurementMode.Energy;
-        public virtual int side { get; set; } = (int)MeasurementSide.Both;
-        public virtual int secondaryMode { get; set; } = (int)MeasurementMode.None;
-        public virtual int secondarySide { get; set; } = (int)MeasurementSide.Both;
+        [UseConverter(typeof(NumericEnumConverter<MeasurementMode>))]
+        public virtual MeasurementMode mode { get; set; } = MeasurementMode.Energy;
+        [UseConverter(typeof(NumericEnumConverter<MeasurementSide>))]
+        public virtual MeasurementSide side { get; set; } = MeasurementSide.Both;
+        [UseConverter(typeof(IntColorConverter))]
+        public Color sideColor {
+            get {
+                return side switch {
+                    MeasurementSide.Left => Color.red,
+                    MeasurementSide.Right => Color.blue,
+                    MeasurementSide.Both => Color.white,
+                    _ => Color.white,
+                };
+            }
+        }
+        [UseConverter(typeof(NumericEnumConverter<MeasurementMode>))]
+        public virtual MeasurementMode secondaryMode { get; set; } = MeasurementMode.None;
+        [UseConverter(typeof(NumericEnumConverter<MeasurementSide>))]
+        public virtual MeasurementSide secondarySide { get; set; } = MeasurementSide.Both;
+        [UseConverter(typeof(IntColorConverter))]
+        public Color secondarySideColor {
+            get {
+                return secondarySide switch {
+                    MeasurementSide.Left => Color.red,
+                    MeasurementSide.Right => Color.blue,
+                    MeasurementSide.Both => Color.white,
+                    _ => Color.white,
+                };
+            }
+        }
         public virtual bool showMisses { get; set; } = false;
         public virtual float animationDuration { get; set; } = 3.0f;
-        public virtual int color { get; set; } = 0xFF0000;
-        public virtual int secondaryColor { get; set; } = 0x0000FF;
+        [UseConverter(typeof(IntColorConverter))]
+        public virtual Color color { get; set; } = new Color(1f, 0f, 0f);
+        [UseConverter(typeof(IntColorConverter))]
+        public virtual Color secondaryColor { get; set; } = new Color(0f, 0f, 1f);
         public virtual bool overrideColor { get; set; } = false;
         public virtual bool overrideSecondaryColor { get; set; } = false;
-        internal MeasurementMode GetMode(bool sec) { return (MeasurementMode)(sec ? secondaryMode : mode); }
-        internal MeasurementSide GetSide(bool sec) { return (MeasurementSide)(sec ? secondarySide : side); }
-        internal UnityEngine.Color GetColor(bool sec) { int c = sec ? secondaryColor : color; return new UnityEngine.Color((float)((c >> 16) & 0xFF) / 255f, (float)((c >> 8) & 0xFF) / 255f, (float)(c & 0xFF) / 255f); }
 
         public enum MeasurementMode {
             Energy,

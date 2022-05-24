@@ -41,16 +41,21 @@ namespace PerformanceMeter {
         GameEnergyCounter energyCounter;
         RelativeScoreAndImmediateRankCounter rankCounter;
         AudioTimeSyncController audioController;
+        PauseController pauseController;
         GameObject panel;
         ILevelEndActions endActions;
         bool levelOk = false;
+        bool levelNotOk = false;
         static readonly FieldInfo _beatmapObjectManager = typeof(ScoreController).GetField("_beatmapObjectManager", BindingFlags.NonPublic | BindingFlags.Instance);
         static readonly FieldInfo _comboController = typeof(ComboUIController).GetField("_comboController", BindingFlags.NonPublic | BindingFlags.Instance);
+        static readonly FieldInfo StandardLevelGameplayManager_pauseController = typeof(StandardLevelGameplayManager).GetField("_pauseController", BindingFlags.NonPublic | BindingFlags.Instance);
+        static readonly FieldInfo MissionLevelGameplayManager_pauseController = typeof(MissionLevelGameplayManager).GetField("_pauseController", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public void ShowResults() {
-            if (!levelOk)
+            if (!levelOk || levelNotOk)
                 return;
             levelOk = false;
+            levelNotOk = false;
             Logger.log.Debug("Found " + energyList.Count() + " primary notes, " + secondaryEnergyList.Count() + " secondary notes");
 
             panel = new GameObject("PerformanceMeter");
@@ -233,6 +238,7 @@ namespace PerformanceMeter {
                 rankCounter = null;
                 audioController = null;
                 endActions = null;
+                pauseController = null;
             }
             if (vc != null) {
                 vc.continueButtonPressedEvent -= DismissGraph;
@@ -251,6 +257,7 @@ namespace PerformanceMeter {
         public void GetControllers() {
             DismissGraph(null);
             levelOk = false;
+            levelNotOk = false;
             averageHitValue = 0.0f;
             averageHitValueSize = 0;
             secondaryAverageHitValue = 0.0f;
@@ -281,6 +288,9 @@ namespace PerformanceMeter {
                 comboController.comboBreakingEventHappenedEvent += ComboBreak;
                 endActions.levelFinishedEvent += LevelFinished;
                 endActions.levelFailedEvent += LevelFinished;
+                if (endActions is StandardLevelGameplayManager) pauseController = (PauseController)StandardLevelGameplayManager_pauseController.GetValue(endActions);
+                else pauseController = (PauseController)MissionLevelGameplayManager_pauseController.GetValue(endActions);
+                pauseController.didReturnToMenuEvent += LevelExit;
                 Logger.log.Debug("PerformanceMeter reloaded successfully");
             } else {
                 Logger.log.Error("Could not reload PerformanceMeter. This may occur when playing online - if so, disregard this message.");
@@ -291,6 +301,7 @@ namespace PerformanceMeter {
                 rankCounter = null;
                 audioController = null;
                 endActions = null;
+                pauseController = null;
             }
         }
 
@@ -427,7 +438,12 @@ namespace PerformanceMeter {
                 comboController.comboBreakingEventHappenedEvent -= ComboBreak;
                 endActions.levelFinishedEvent -= LevelFinished;
                 endActions.levelFailedEvent -= LevelFinished;
+                pauseController.didReturnToMenuEvent -= LevelExit;
             }
+        }
+
+        private void LevelExit() {
+            if (!levelOk) levelNotOk = true;
         }
 
         #region Monobehaviour Messages

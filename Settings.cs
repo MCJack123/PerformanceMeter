@@ -9,8 +9,8 @@
  */
 
 using BeatSaberMarkupLanguage.Attributes;
+using BeatSaberMarkupLanguage.Util;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
 
 
@@ -72,7 +72,7 @@ namespace PerformanceMeter {
             PluginConfig.Instance.Changed();
         }
 
-        Settings() {
+        public Settings() {
             listChoice = modeOptions[(int)PluginConfig.Instance.mode] as string;
             sideChoice = sideOptions[(int)PluginConfig.Instance.side] as string;
             secondaryListChoice = secondaryModeOptions[(int)PluginConfig.Instance.secondaryMode] as string;
